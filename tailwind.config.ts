@@ -8,6 +8,8 @@ export default {
       "primary": "#1C1C1C",
       "secondary": "#DADDD8",
       "accent": "#ECEBE4",
+      "tertiary": "#EEF0F2",
+      "quaternary": "#FAFAFF",
       "error": "#B00020",
     },
     extend: {
