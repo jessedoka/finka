@@ -12,20 +12,21 @@ export const accountRouter = createTRPCRouter({
     }),
 
   create: publicProcedure
-    .input(z.object({ name: z.string().min(1) }))
-    .mutation(async ({ ctx, input }) => {
-      // simulate a slow db call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      return ctx.db.account.create({
-        data: {
-          name: input.name,
-        },
-      });
-    }),
+      .input(z.object({ name: z.string().min(1), user_id: z.string() }))
+      .mutation(async ({ ctx, input }) => {
+        // simulate a slow db call
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+  
+        return ctx.db.accounts.create({
+          data: {
+            name: input.name,
+            user_id: input.user_id,
+          },
+        });
+      }),
 
   getLatest: publicProcedure.query(({ ctx }) => {
-      return ctx.db.account.findFirst({
+      return ctx.db.accounts.findFirst({
         orderBy: {
           createdAt: "desc",
         },
@@ -33,13 +34,13 @@ export const accountRouter = createTRPCRouter({
     }),
 
   getAll: publicProcedure.query(({ ctx }) => {
-      return ctx.db.account.findMany();
+      return ctx.db.accounts.findMany();
     }),
 
   getById: publicProcedure
     .input(z.object({ id: z.number().optional() }))
     .query(({ ctx, input }) => {
-      return ctx.db.account.findUnique({
+      return ctx.db.accounts.findUnique({
         where: {
           id: input.id,
         },
@@ -49,7 +50,7 @@ export const accountRouter = createTRPCRouter({
   update: publicProcedure
     .input(z.object({ id: z.number(), name: z.string().min(1) }))
     .mutation(({ ctx, input }) => {
-      return ctx.db.account.update({
+      return ctx.db.accounts.update({
         where: {
           id: input.id,
         },
@@ -62,7 +63,7 @@ export const accountRouter = createTRPCRouter({
   delete: publicProcedure
     .input(z.object({ id: z.number() }))
     .mutation(({ ctx, input }) => {
-      return ctx.db.account.delete({
+      return ctx.db.accounts.delete({
         where: {
           id: input.id,
         },
@@ -70,6 +71,6 @@ export const accountRouter = createTRPCRouter({
     }),
 
   deleteAll: publicProcedure.mutation(({ ctx }) => {
-      return ctx.db.account.deleteMany();
+      return ctx.db.accounts.deleteMany();
     }),
 });

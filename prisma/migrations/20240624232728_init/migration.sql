@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "Account" (
+CREATE TABLE "public"."Account" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -9,7 +9,7 @@ CREATE TABLE "Account" (
 );
 
 -- CreateTable
-CREATE TABLE "Transaction" (
+CREATE TABLE "public"."Transaction" (
     "id" SERIAL NOT NULL,
     "description" TEXT NOT NULL,
     "amount" DOUBLE PRECISION NOT NULL,
@@ -21,10 +21,10 @@ CREATE TABLE "Transaction" (
 );
 
 -- CreateIndex
-CREATE INDEX "Account_name_idx" ON "Account"("name");
+CREATE INDEX "Account_name_idx" ON "public"."Account"("name");
 
 -- CreateIndex
-CREATE INDEX "Transaction_accountId_idx" ON "Transaction"("accountId");
+CREATE INDEX "Transaction_accountId_idx" ON "public"."Transaction"("accountId");
 
 -- AddForeignKey
-ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "Account"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."Transaction" ADD CONSTRAINT "Transaction_accountId_fkey" FOREIGN KEY ("accountId") REFERENCES "public"."Account"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

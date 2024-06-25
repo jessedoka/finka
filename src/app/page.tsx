@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { CreateAccount } from "~/app/_components/create-account";
 import { api } from "~/trpc/server";
 
@@ -15,15 +13,18 @@ export default async function Home() {
 }
 
 async function CrudShowcase() {
-  const latestAccount = await api.account.getLatest();
+  const allAccounts = await api.account.getAll()
 
   return (
     <div className="w-full max-w-xs">
-      {latestAccount ? (
-        <p className="truncate">Your most recent post: {latestAccount.name}</p>
-      ) : (
-        <p>You have no account yet.</p>
-      )}
+      <h1>Accounts</h1>
+      <ul>
+        {allAccounts.map((account) => (
+          <li key={account.id}>
+            <p>{account.name}</p>
+          </li>
+        ))}
+      </ul>
 
       <CreateAccount />
     </div>

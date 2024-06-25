@@ -2,12 +2,25 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { createClient } from '../../utils/supabase/client'
+import { redirect } from 'next/navigation'
 
 import { api } from "~/trpc/react";
 
-export function CreateAccount() {
+async function getUser() {
+  const supabase = createClient()
+  const { data, error } = await supabase.auth.getUser()
+  if (error ?? !data?.user) {
+    redirect('/login')
+  }
+
+  return { data }
+}
+
+export async function CreateAccount() {
   const router = useRouter();
   const [name, setName] = useState("");
+  const { data } = await getUser();
 
   const createAccount = api.account.create.useMutation({
     onSuccess: () => {
@@ -20,7 +33,7 @@ export function CreateAccount() {
     <form
       onSubmit={(e) => {
         e.preventDefault();
-        createAccount.mutate({ name });
+        createAccount.mutate({ name, user_id: data.user?.id});
       }}
       className="flex flex-col gap-2"
     >
