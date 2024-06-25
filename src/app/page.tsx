@@ -1,18 +1,24 @@
 import { CreateAccount } from "~/app/_components/create-account";
 import { api } from "~/trpc/server";
+import { createClient } from "~/utils/supabase/server";
+
+const supabase = createClient()
+
 
 export default async function Home() {
-  const hello = await api.account.hello({ text: "from tRPX" });
+  const { data } = await getUser();
+  const hello = await api.account.hello({ text: data.user?.email ?? "world"});
 
   return (
     <main>
       <h1>{hello.greeting}</h1>
-      <CrudShowcase />
+      <CrudShowcase id={data.user?.id}/>
+     
     </main>
   );
 }
 
-async function CrudShowcase() {
+async function CrudShowcase({id}: {id: string | undefined}) {
   const allAccounts = await api.account.getAll()
 
   return (
@@ -26,7 +32,17 @@ async function CrudShowcase() {
         ))}
       </ul>
 
-      <CreateAccount />
+      <CreateAccount id={id}/>
     </div>
   );
 }
+
+async function getUser() {
+  const { data, error } = await supabase.auth.getUser()
+  if (error ?? !data?.user) {
+    console.error(error)
+  }
+
+  return { data }
+}
+
