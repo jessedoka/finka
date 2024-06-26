@@ -3,16 +3,6 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "~/trpc/react";
-import { createClient } from "~/utils/supabase/client";
-
-async function signOut() {
-  const supabase = createClient()
-  const { error } = await supabase.auth.signOut()
-
-  if (error) {
-    console.error(error)
-  }
-}
 
 export function CreateAccount({id}: {id: string | undefined}) {
   const router = useRouter();
@@ -49,7 +39,6 @@ export function CreateAccount({id}: {id: string | undefined}) {
           {createAccount.isPending ? "Submitting..." : "Submit"}
         </button>
       </form>
-      <button onClick={signOut}>Sign out</button>
     </div>
   );
 }

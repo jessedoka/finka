@@ -3,14 +3,6 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const accountRouter = createTRPCRouter({
-  hello: publicProcedure
-    .input(z.object({ text: z.string() }))
-    .query(({ input }) => {
-      return {
-        greeting: `Hello ${input.text}`,
-      };
-    }),
-
   create: publicProcedure
       .input(z.object({ name: z.string().min(1), user_id: z.string().optional() }))
       .mutation(async ({ ctx, input }) => {
@@ -33,16 +25,12 @@ export const accountRouter = createTRPCRouter({
       });
     }),
 
-  getAll: publicProcedure.query(({ ctx }) => {
-      return ctx.db.accounts.findMany();
-    }),
-
-  getById: publicProcedure
-    .input(z.object({ id: z.number().optional() }))
+  getbyUserId: publicProcedure
+    .input(z.object({ id: z.string().optional() }))
     .query(({ ctx, input }) => {
-      return ctx.db.accounts.findUnique({
+      return ctx.db.accounts.findMany({
         where: {
-          id: input.id,
+          user_id: input.id,
         },
       });
     }),
