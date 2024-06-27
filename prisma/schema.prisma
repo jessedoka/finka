@@ -25,9 +25,10 @@ model Accounts {
 
 model Transactions {
   id          Int      @id @default(autoincrement())
-  description String
+  memo        String 
   amount      Float
   accountId   Int
+  transactionDate  DateTime
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   account     Accounts  @relation(fields: [accountId], references: [id])

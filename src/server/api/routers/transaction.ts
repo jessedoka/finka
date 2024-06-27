@@ -4,22 +4,23 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 export const transactionRouter = createTRPCRouter({
     create: publicProcedure
-        .input(z.object({ description: z.string().min(1), amount: z.number(), accountId: z.number() }))
+        .input(z.object({ memo: z.string().min(1), amount: z.number(), accountId: z.number() }))
         .mutation(async ({ ctx, input }) => {
         // simulate a slow db call
         await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        return ctx.db.transaction.create({
+    
+        return ctx.db.transactions.create({
             data: {
-                description: input.description,
+                memo: input.memo,
                 amount: input.amount,
-                accountId: input.accountId
+                accountId: input.accountId,
+                transactionDate: new Date() // Add the transactionDate property
             },
         });
     }),
 
     getLatest: publicProcedure.query(({ ctx }) => {
-        return ctx.db.transaction.findFirst({
+        return ctx.db.transactions.findFirst({
             orderBy: {
                 createdAt: "desc",
             },
@@ -27,13 +28,13 @@ export const transactionRouter = createTRPCRouter({
     }),
 
     getAll: publicProcedure.query(({ ctx }) => {
-        return ctx.db.transaction.findMany();
+        return ctx.db.transactions.findMany();
     }),
 
     getById: publicProcedure
         .input(z.object({ id: z.number().optional() }))
         .query(({ ctx, input }) => {
-        return ctx.db.transaction.findUnique({
+        return ctx.db.transactions.findUnique({
             where: {
                 id: input.id,
             },
@@ -41,16 +42,17 @@ export const transactionRouter = createTRPCRouter({
     }),
 
     update: publicProcedure
-        .input(z.object({ id: z.number(), description: z.string().min(1), amount: z.number(), accountId: z.number() }))
+        .input(z.object({ id: z.number(), memo: z.string().min(1), amount: z.number(), accountId: z.number() }))
         .mutation(({ ctx, input }) => {
-        return ctx.db.transaction.update({
+        return ctx.db.transactions.update({
             where: {
                 id: input.id,
             },
             data: {
-                description: input.description,
+                memo: input.memo,
                 amount: input.amount,
-                accountId: input.accountId
+                accountId: input.accountId,
+                transactionDate: new Date() // Add the transactionDate property
             },
         });
     }),
@@ -58,7 +60,7 @@ export const transactionRouter = createTRPCRouter({
     delete: publicProcedure
         .input(z.object({ id: z.number() }))
         .mutation(({ ctx, input }) => {
-        return ctx.db.transaction.delete({
+        return ctx.db.transactions.delete({
             where: {
                 id: input.id,
             },
@@ -68,7 +70,7 @@ export const transactionRouter = createTRPCRouter({
     getByAccountId: publicProcedure
         .input(z.object({ accountId: z.number() }))
         .query(({ ctx, input }) => {
-        return ctx.db.transaction.findMany({
+        return ctx.db.transactions.findMany({
             where: {
                 accountId: input.accountId
             }

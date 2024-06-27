@@ -26,11 +26,11 @@ export const accountRouter = createTRPCRouter({
     }),
 
   getbyUserId: publicProcedure
-    .input(z.object({ id: z.string().optional() }))
+    .input(z.object({ user_id: z.string().optional() }))
     .query(({ ctx, input }) => {
       return ctx.db.accounts.findMany({
         where: {
-          user_id: input.id,
+          user_id: input.user_id,
         },
       });
     }),
