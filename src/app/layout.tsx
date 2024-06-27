@@ -5,6 +5,8 @@ import { GeistSans } from "geist/font/sans";
 import { TRPCReactProvider } from "~/trpc/react";
 import { Manrope } from 'next/font/google'
 import { cn } from '~/lib/utils'
+import Sidebar from "~/components/Sidebar";
+import Navigation from "~/components/Navigation";
 
 const fontHeading = Manrope({
   subsets: ['latin'],
@@ -38,7 +40,17 @@ export default function RootLayout({
           fontBody.variable
         )}
       >
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <TRPCReactProvider>
+          <div className="grid min-h-screen w-full grid-cols-1 bg-muted/40 lg:grid-cols-[280px_1fr]">
+            <div className="hidden border-r bg-muted/40 lg:block">
+              <Sidebar />
+            </div>
+            <div className="flex flex-col">
+              <Navigation />
+              {children}
+            </div>
+          </div>
+        </TRPCReactProvider>
       </body>
     </html>
   );
