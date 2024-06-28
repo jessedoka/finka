@@ -4,6 +4,7 @@ import React, { useState } from "react"
 import { Button } from "./ui/button"
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "./ui/dropdown-menu"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "./ui/table"
+import { useToast } from "./ui/use-toast"
 import { useRouter } from "next/navigation"
 import { api } from "../trpc/react"
 
@@ -18,26 +19,47 @@ type allAccountProps = {
 export default function AccountTable({allAccounts}: {allAccounts: allAccountProps}) {
     const [editMode, setEditMode] = useState<Record<number, boolean>>({}); 
     const router = useRouter();
+    const { toast } = useToast()
 
     const toggleEditMode = (accountId: number) => {
         setEditMode((prev) => ({ ...prev, [accountId]: !prev[accountId] }));
     };
 
-    const createAccount = api.account.update.useMutation({
+    const updateAccount = api.account.update.useMutation({
         onSuccess: () => {
             router.refresh();
+            toast({
+                title: "Account updated",
+                description: "The account has been updated successfully",
+            })
         },
+        onError: (error) => {
+            toast({
+                title: "Account update failed",
+                description: error.message
+            })
+        }
     })
 
     const deleteAccount = api.account.delete.useMutation({
         onSuccess: () => {
             router.refresh();
+            toast({
+                title: "Account deleted",
+                description: "The account has been deleted successfully",
+            })
         },
+        onError: (error) => {
+            toast({
+                title: "Account deletion failed",
+                description: error.message
+            })
+        }
     })
 
     const updateAccountName = (accountId: number, newName: string) => {
         // Implement the logic to update the account name
-        createAccount.mutate({ name: newName, id: accountId });
+        updateAccount.mutate({ name: newName, id: accountId });
         // This could involve setting state or making an API call
         console.log(`Updating account ${accountId} name to ${newName}`);
         // After updating, you might want to toggle off the edit mode

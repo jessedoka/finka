@@ -17,6 +17,7 @@ import { Input } from "./ui/input"
 import { useState } from 'react';
 import { api } from "~/trpc/react";
 import { useRouter } from 'next/navigation';
+import { useToast } from "./ui/use-toast";
 
 const formSchema = z.object({
     name: z.string().min(2, {
@@ -27,6 +28,7 @@ const formSchema = z.object({
 
 export function CreateAccount({id}: {id: string | undefined}) {
     const router = useRouter();
+    const { toast } = useToast();
     const [isVisible, setIsVisible] = useState(false);
 
     const toggleOverlay = () => {
@@ -36,7 +38,17 @@ export function CreateAccount({id}: {id: string | undefined}) {
     const createAccount = api.account.create.useMutation({
         onSuccess: () => {
             router.refresh();
+            toast({
+                title: "Account created",
+                description: "The account has been created successfully",
+            })
         },
+        onError: (error) => {
+            toast({
+                title: "Account creation failed",
+                description: error.message
+            })
+        }
     })
 
 

@@ -5,6 +5,7 @@ import { GeistSans } from "geist/font/sans";
 import { TRPCReactProvider } from "~/trpc/react";
 import { Manrope } from 'next/font/google'
 import { cn } from '~/lib/utils'
+import { Toaster } from "~/components/ui/toaster"
 import Sidebar from "~/components/Sidebar";
 import Navigation from "~/components/Navigation";
 
@@ -51,6 +52,7 @@ export default function RootLayout({
             </div>
           </div>
         </TRPCReactProvider>
+        <Toaster />
       </body>
     </html>
   );
