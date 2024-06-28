@@ -56,7 +56,7 @@ export function CreateAccount({id}: {id: string | undefined}) {
 
     return (
         <div className='ml-auto'>
-            <Button size="sm" onClick={toggleOverlay}>Show Accounts</Button>
+            <Button size="sm" onClick={toggleOverlay}>Add Accounts</Button>
 
             {isVisible && (
                 <div className="fixed inset-0 flex items-center justify-center z-50">
