@@ -1,12 +1,34 @@
+"use client"
+
 import React from "react";
 import { Button } from "./ui/button";
+import { usePathname } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import Link from "next/link";
 import { BellIcon, HomeIcon, LineChartIcon, Package2Icon, PackageIcon, UsersIcon } from "lucide-react"
 
+const menu = [
+    {
+        title: "Dashboard",
+        icon: HomeIcon,
+        href: "/",
+    },
+    {
+        title: "Accounts",
+        icon: PackageIcon,
+        href: "/accounts",
+    },
+    {
+        title: "All Transactions",
+        icon: UsersIcon,
+        href: "#",
+    },
+]
 
 
 export default function Sidebar() {
+    const pathname = usePathname();
+    
     return (
         <div className="flex h-full max-h-screen flex-col gap-2">
             <div className="flex h-[60px] items-center border-b px-6">
@@ -21,38 +43,13 @@ export default function Sidebar() {
             </div>
             <div className="flex-1 overflow-auto py-2">
                 <nav className="grid items-start px-4 text-sm font-medium">
-                    <Link
-                        href="#"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-                        prefetch={false}
-                    >
-                        <HomeIcon className="h-4 w-4" />
-                        Home
-                    </Link>
-                    <Link
-                        href="#"
-                        className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2 text-primary transition-all hover:text-primary"
-                        prefetch={false}
-                    >
-                        <PackageIcon className="h-4 w-4" />
-                        Accounts
-                    </Link>
-                    <Link
-                        href="#"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-                        prefetch={false}
-                    >
-                        <UsersIcon className="h-4 w-4" />
-                        Customers
-                    </Link>
-                    <Link
-                        href="#"
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-                        prefetch={false}
-                    >
-                        <LineChartIcon className="h-4 w-4" />
-                        Analytics
-                    </Link>
+                    {menu.map((item) => (
+                        <Link key={item.title
+                        } href={item.href} className={`flex items-center gap-2 p-2 rounded-lg hover:bg-secondary ${pathname === item.href ? "bg-secondary" : ""}`}>
+                            <item.icon className="w-6 h-6" />
+                            <span>{item.title}</span>
+                        </Link>
+                    ))}
                 </nav>
             </div>
             <div className="mt-auto p-4">

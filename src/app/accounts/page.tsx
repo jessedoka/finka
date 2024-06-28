@@ -7,6 +7,7 @@ import { api } from "../../trpc/server";
 import { createClient } from "../../utils/supabase/server";
 import { redirect } from "next/navigation";
 import { CreateAccount } from "../../components/createAccount";
+import { UpdateAccount } from "~/components/updateAccount";
 
 export default async function Account() {
     const supabase = createClient();
@@ -50,8 +51,12 @@ export default async function Account() {
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem>Edit</DropdownMenuItem>
-                                                <DropdownMenuItem>Delete</DropdownMenuItem>
+                                                <DropdownMenuItem>
+                                                    Edit
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem>
+                                                    Delete
+                                                </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </TableCell>
