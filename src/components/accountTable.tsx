@@ -81,12 +81,15 @@ export default function AccountTable({allAccounts}: {allAccounts: allAccountProp
                         allAccounts.map((account) => (
                             <TableRow key={account.id}>
                                 {editMode[account.id] ? (
-                                    <input
-                                        type="text"
-                                        defaultValue={account.name}
-                                        onBlur={(e) => updateAccountName(account.id, e.target.value)}
-                                        autoFocus
-                                    />
+                                    <TableCell>
+                                        <input
+                                            type="text"
+                                            className="border-none bg-transparent outline-none"
+                                            defaultValue={account.name}
+                                            onBlur={(e) => updateAccountName(account.id, e.target.value)}
+                                            autoFocus
+                                        />
+                                    </TableCell>
                                 ) : (
                                     <TableCell>{account.name}</TableCell>
                                 )}
