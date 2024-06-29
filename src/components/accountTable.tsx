@@ -110,11 +110,9 @@ export default function AccountTable({allAccounts}: {allAccounts: allAccountProp
                                     </Button> 
                                     {editMode[account.id] ? "" : (
                                         <Button onClick={() => deleteAccount.mutate({ id: account.id })}>
-                                            {editMode[account.id] ? "" : deleteAccount.isPending ? "Deleting..." : "Delete"}
-
+                                            {deleteAccount.isPending ? "Deleting..." : "Delete"}
                                         </Button>
                                     )}
-                    
                                 </TableCell>
                             </TableRow>
                         ))
