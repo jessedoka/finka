@@ -41,6 +41,25 @@ export default function AccountTable({allAccounts}: {allAccounts: allAccountProp
         }
     })
 
+    const updateAccountName = (accountId: number, newName: string) => {
+        if (newName === "") {
+            toast({
+                title: "Account name cannot be empty",
+                description: "Please enter a valid account name",
+            });
+            return;
+        }
+
+        if (newName === allAccounts.find((account) => account.id === accountId)?.name) {
+            toggleEditMode(accountId);
+            return;
+        }
+
+
+        updateAccount.mutate({ name: newName, id: accountId });
+        toggleEditMode(accountId);
+    };
+
     const deleteAccount = api.account.delete.useMutation({
         onSuccess: () => {
             router.refresh();
@@ -56,15 +75,6 @@ export default function AccountTable({allAccounts}: {allAccounts: allAccountProp
             })
         }
     })
-
-    const updateAccountName = (accountId: number, newName: string) => {
-        // Implement the logic to update the account name
-        updateAccount.mutate({ name: newName, id: accountId });
-        // This could involve setting state or making an API call
-        console.log(`Updating account ${accountId} name to ${newName}`);
-        // After updating, you might want to toggle off the edit mode
-        toggleEditMode(accountId);
-    };
 
     return (
         <div className="border shadow-sm rounded-lg">
@@ -94,18 +104,17 @@ export default function AccountTable({allAccounts}: {allAccounts: allAccountProp
                                     <TableCell>{account.name}</TableCell>
                                 )}
                                 <TableCell>0</TableCell>
-                                <TableCell>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="rounded-full border w-8 h-8">
-                                                <span className="sr-only">Toggle account menu</span>
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onSelect={() => toggleEditMode(account.id)}>Edit</DropdownMenuItem> 
-                                            <DropdownMenuItem onSelect={() => deleteAccount.mutate({id: account.id})}>Delete</DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                                <TableCell className="space-x-3"> 
+                                    <Button onClick={() => toggleEditMode(account.id)}>
+                                        {editMode[account.id] ? "Cancel" : "Edit"}
+                                    </Button> 
+                                    {editMode[account.id] ? "" : (
+                                        <Button onClick={() => deleteAccount.mutate({ id: account.id })}>
+                                            {editMode[account.id] ? "" : deleteAccount.isPending ? "Deleting..." : "Delete"}
+
+                                        </Button>
+                                    )}
+                    
                                 </TableCell>
                             </TableRow>
                         ))
