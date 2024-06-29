@@ -1,10 +1,10 @@
 import React from "react"
 
-import { api } from "../../trpc/server";
-import { createClient } from "../../utils/supabase/server";
+import { api } from "~/trpc/server";
+import { createClient } from "~/utils/supabase/server";
 import { redirect } from "next/navigation";
-import { CreateAccount } from "../../components/createAccount";
-import AccountTable from "../../components/accountTable";
+import { CreateAccount } from "~/components/createAccount";
+import AccountTable from "~/components/accountTable";
 
 export default async function Account() {
     const supabase = createClient();

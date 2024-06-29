@@ -2,7 +2,6 @@
 
 import React, { useState } from "react"
 import { Button } from "./ui/button"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "./ui/dropdown-menu"
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "./ui/table"
 import { useToast } from "./ui/use-toast"
 import { useRouter } from "next/navigation"
@@ -89,7 +88,7 @@ export default function AccountTable({allAccounts}: {allAccounts: allAccountProp
                 <TableBody>
                     {allAccounts ? (
                         allAccounts.map((account) => (
-                            <TableRow key={account.id}>
+                            <TableRow key={account.id} onClick={() => router.push(`/accounts/${account.id}`)} className="cursor-pointer">
                                 {editMode[account.id] ? (
                                     <TableCell>
                                         <input

@@ -14,14 +14,6 @@ export const accountRouter = createTRPCRouter({
         });
       }),
 
-  getLatest: publicProcedure.query(({ ctx }) => {
-      return ctx.db.accounts.findFirst({
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
-    }),
-
   getbyUserId: publicProcedure
     .input(z.object({ user_id: z.string().optional() }))
     .query(({ ctx, input }) => {
