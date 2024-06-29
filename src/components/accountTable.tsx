@@ -6,6 +6,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from ".
 import { useToast } from "./ui/use-toast"
 import { useRouter } from "next/navigation"
 import { api } from "../trpc/react"
+import Link from "next/link"
 
 type allAccountProps = { 
     id: number; 
@@ -88,7 +89,7 @@ export default function AccountTable({allAccounts}: {allAccounts: allAccountProp
                 <TableBody>
                     {allAccounts ? (
                         allAccounts.map((account) => (
-                            <TableRow key={account.id} onClick={() => router.push(`/accounts/${account.id}`)} className="cursor-pointer">
+                            <TableRow key={account.id}>
                                 {editMode[account.id] ? (
                                     <TableCell>
                                         <input
@@ -102,15 +103,20 @@ export default function AccountTable({allAccounts}: {allAccounts: allAccountProp
                                 ) : (
                                     <TableCell>{account.name}</TableCell>
                                 )}
-                                <TableCell>0</TableCell>
-                                <TableCell className="space-x-3"> 
+                                <TableCell>{account.id}</TableCell>
+                                <TableCell className="flex space-x-3"> 
                                     <Button onClick={() => toggleEditMode(account.id)}>
                                         {editMode[account.id] ? "Cancel" : "Edit"}
                                     </Button> 
                                     {editMode[account.id] ? "" : (
-                                        <Button onClick={() => deleteAccount.mutate({ id: account.id })}>
-                                            {deleteAccount.isPending ? "Deleting..." : "Delete"}
-                                        </Button>
+                                        <div className="space-x-3">
+                                            <Button onClick={() => deleteAccount.mutate({ id: account.id })}>
+                                                {deleteAccount.isPending ? "Deleting..." : "Delete"}
+                                            </Button>
+                                            <Link href={`/accounts/${account.id}`}>
+                                                View Transactions
+                                            </Link>
+                                        </div>
                                     )}
                                 </TableCell>
                             </TableRow>
