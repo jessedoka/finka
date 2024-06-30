@@ -1,32 +1,38 @@
-import { api } from "~/trpc/server"
+import { api } from "~/trpc/server" 
+import { createClient } from "~/utils/supabase/server"
+import { redirect } from "next/navigation"
+import TransactionsTable from "~/components/transactionTable"
 
 // get params from the URL
 
-async function TransactionPage({ params }: { params: { accountId: number } }) {
-    if (!params.accountId) {
-        return <div>Account ID not found</div>;
-    }
-
-    if (typeof params.accountId !== "number") {
-        return <div>Account ID must be a number {params.accountId}</div>;
-    }
+async function TransactionPage({ params } : {params: { accountId: string }}) {
    
+    const { accountId } = params
 
-    const allTransactions = await api.transaction.getAllbyAccountId({ accountId: params.accountId });
+    const supabase = createClient();
 
-    return ( 
-        <div>
-            <h1>Transaction Page</h1>
-            <p>Account ID: {params.accountId}</p>
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
 
-            <ul>
-                {allTransactions.map((transaction) => (
-                    <li key={transaction.id}>
-                        {transaction.memo} - {transaction.amount}
-                    </li>
-                ))}
-            </ul>
-        </div>
+    if (!user) {
+        return redirect("/login");
+    }
+
+    if (!accountId || Array.isArray(accountId)) {
+        return <div>Invalid account ID</div>;
+    }
+
+    const allTransactions = await api.transaction.getAllbyAccountId({ accountId: parseInt(accountId) });
+
+    return (
+        <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+            <div className="flex items-center">
+                <h1 className="font-semibold text-lg md:text-2xl">Transactions</h1>
+                {/* <CreateTransaction id={user?.id} /> */}
+            </div>
+            <TransactionsTable transactions={allTransactions} />
+        </main>
     );
 }
 
