@@ -41,17 +41,7 @@ export default function RootLayout({
           fontBody.variable
         )}
       >
-        <TRPCReactProvider>
-          <div className="grid min-h-screen w-full grid-cols-1 bg-muted/40 lg:grid-cols-[280px_1fr]">
-            <div className="hidden border-r bg-muted/40 lg:block">
-              <Sidebar />
-            </div>
-            <div className="flex flex-col">
-              <Navigation />
-              {children}
-            </div>
-          </div>
-        </TRPCReactProvider>
+        {children}
         <Toaster />
       </body>
     </html>
