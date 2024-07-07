@@ -2,7 +2,7 @@ import Link from "next/link"
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { SubmitButton } from "../../../components/submit-button"
-
+import Logo from "../../../components/logo"
 import { createClient } from '~/utils/supabase/server'
 
 export async function signup(formData: FormData) {
@@ -34,10 +34,10 @@ async function RegisterPage({
 }) {
 
     return (
-        <section className="bg-gray-50 dark:bg-gray-900">
+        <section className="bg-background">
             <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-                <Link href="/" className="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
-                    {/* <Logo force={false} /> */}
+                <Link href="/" className="flex items-center mb-6">
+                    <Logo />
                 </Link>
 
                 {/* message */}
@@ -47,30 +47,27 @@ async function RegisterPage({
                     </p>
                 )}
 
-                <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
+                <div className="w-full rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 bg-secondary border-white">
                     <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-                        <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
+                        <h1 className="text-xl font-bold leading-tight tracking-tight md:text-2xl">
                             Create Account
                         </h1>
                         <form className="space-y-4 md:space-y-6">
                             <div>
-                                <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>
+                                <label className="block mb-2 text-sm font-medium">Your email</label>
 
-                                <input type="email" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-orange-500 dark:focus:border-orange-500" placeholder="example@company.com"
+                                <input type="email" className="border text-gray-900 sm:text-sm rounded-lg block w-full p-2.5" placeholder="example@company.com"
                                     
                                 />
                             </div>
                             <div>
-                                <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
-                                <input type="password" name="password" id="password" placeholder="••••••••" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-orange-500 dark:focus:border-orange-500"
-                                    
+                                <label className="block mb-2 text-sm font-medium">Password</label>
+                                <input type="password" name="password" id="password" placeholder="••••••••" className="border text-gray-900 sm:text-sm rounded-lg block w-full p-2.5" 
                                 />
                             </div>
                             <div>
-                                
-
-                                <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm password</label>
-                                <input type="password" name="confirm-password" id="confirm-password" placeholder="••••••••" className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-orange-500 dark:focus:border-orange-500"
+                                <label className="block mb-2 text-sm font-medium">Confirm password</label>
+                                <input type="password" name="confirm-password" id="confirm-password" placeholder="••••••••" className="border text-gray-900 sm:text-sm rounded-lg block w-full p-2.5"
                                     />
                             </div>
 
@@ -83,9 +80,11 @@ async function RegisterPage({
                                     <label className="font-light text-gray-500 dark:text-gray-300">I accept the <Link className="font-medium text-primary-600 hover:underline dark:text-primary-500" href="#">Terms and Conditions</Link></label>
                                 </div>
                             </div>
-                            <SubmitButton formAction={signup} />
+                            <SubmitButton formAction={signup} pendingText="Loading">
+                                Sign up
+                            </SubmitButton>
 
-                            <p className="text-sm font-light text-gray-500 dark:text-gray-400">
+                            <p className="text-sm font-light text-gray-500">
                                 Already have an account? <Link href="/login"
                                     className="font-medium text-orange-600 hover:underline dark:text-orange-500">Login here</Link>
                             </p>
