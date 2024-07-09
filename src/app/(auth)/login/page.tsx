@@ -1,36 +1,8 @@
 import Link from "next/link"
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import { SubmitButton } from "../../../components/submit-button"
 import Logo from "../../../components/logo"
-import { createClient } from '~/utils/supabase/server'
-
-export async function login(formData: FormData) {
-
-  "use server"
-  
-  const supabase = createClient()
-
-  if (!formData) {
-    redirect('/error')
-  }
-
-  // type-casting here for convenience
-  // in practice, you should validate your inputs
-  const data = {
-    email: formData.get('email') as string,
-    password: formData.get('password') as string,
-  }
-
-  const { error } = await supabase.auth.signInWithPassword(data)
-  console.log(error)
-  if (error) {
-    redirect('/error')
-  }
-
-  revalidatePath('/', 'layout')
-  redirect('/')
-}
+import UserAuthForm  from "../../../components/userAuthForm"
+import { cn } from "../../../lib/utils"
+import { buttonVariants } from "../../../components/ui/button"
 
 async function LoginPage({
   searchParams,
@@ -39,56 +11,67 @@ async function LoginPage({
 }) {
 
   return (
-    <section className="bg-background">
-      <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-        <Link href="/" className="flex items-center mb-6">
-          <Logo />
+    <main>
+      <div className="container relative h-screen hidden flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+        <Link
+          href="/login"
+          className={cn(
+            buttonVariants({ variant: "ghost" }),
+            "absolute top-0 right-0 mt-8 mr-8"
+          )}
+        >
+          Login
         </Link>
-
-        {searchParams?.message && (
-          <p className={`px-4 py-2 mb-4 text-sm text-white rounded-md`}>
-            {searchParams.message}
-          </p>
-        )}
-
-        <div className="w-full rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 bg-secondary border-white">
-          <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-            <h1 className="text-xl font-bold leading-tight tracking-tight md:text-2xl">
-              Sign in to your account
-            </h1>
-            <form className="space-y-4 md:space-y-6">
-              <div>
-                <label className="block mb-2 text-sm font-medium">Your email</label>
-                <input type="email" name="email" id="email" className="border text-gray-900 sm:text-sm rounded-lg block w-full p-2.5" placeholder="example@company.com"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">Password</label>
-                <input type="password" name="password" id="password" placeholder="••••••••" className="border text-gray-900 sm:text-sm rounded-lg block w-full p-2.5"
-                  required
-                />
-              </div>
-              {/* <div className="flex flex-col items-center">
-                <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm you are human</label>
-              </div> */}
-
-              {/* function not finished */}
-              <div className="flex items-center justify-between">
-                <Link href="#" className="text-sm font-medium text-orange-600 hover:underline dark:text-orange-500">Forgot password?</Link>
-              </div>
-              <SubmitButton formAction={login} pendingText="Loading">
-                Sign in
-              </SubmitButton>
-
-              <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-                Don’t have an account yet? <Link href="/register" className="font-medium text-orange-600 hover:underline dark:text-orange-500">Sign up</Link>
+        
+        <div className="relative hidden h-full flex-col bg-muted p-10 text-white dark:border-r lg:flex">
+          <div className="absolute inset-0 bg-zinc-900" />
+          <div className="relative z-20 flex items-center text-lg font-medium space-x-5 justify-between">
+            <Logo />
+            {/* <ModeToggle /> */}
+          </div>
+          
+          <div className="relative z-20 mt-auto">
+            <blockquote className="space-y-2">
+              <p className="text-lg">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
               </p>
-            </form>
+              <footer className="text-sm">Some Guy</footer>
+            </blockquote>
+          </div>
+        </div>
+        <div className="lg:p-8">
+          <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+            <div className="flex flex-col space-y-2 text-center">
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Create an account
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Enter your email below to create your account
+              </p>
+            </div>
+            <UserAuthForm searchParams={searchParams} />
+            <p className="px-8 text-center text-sm text-muted-foreground">
+              By clicking continue, you agree to our{" "}
+              <Link
+                href="/terms"
+                className="underline underline-offset-4 hover:text-primary"
+              >
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy"
+                className="underline underline-offset-4 hover:text-primary"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </p>
           </div>
         </div>
       </div>
-    </section>
+    </main>
+    
   )
 }
 
