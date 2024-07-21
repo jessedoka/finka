@@ -93,6 +93,8 @@ async function RegisterPage({
                 </div>
             </div>
         </section>
+
+        
     )
 }
 
