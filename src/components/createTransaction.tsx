@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form"
 import { Button } from "./ui/button"
 import {
     Form,
-    FormControl,
     FormDescription,
     FormField,
     FormItem,
@@ -71,7 +70,7 @@ export function CreateTransaction({ id }: { id: number }) {
         if (isNaN(parseInt(e.target.value, 10))) {
             return;
         }
-        
+
         const intValue = parseInt(e.target.value, 10);
         form.setValue("amount", intValue);
     };
@@ -79,7 +78,7 @@ export function CreateTransaction({ id }: { id: number }) {
 
     return (
         <div className='ml-auto'>
-            <Button size="sm" onClick={toggleOverlay}>Add Transactions</Button>
+            <Button size="sm" onClick={toggleOverlay}>Add Transaction</Button>
 
             {isVisible && (
                 <div className="fixed inset-0 flex items-center justify-center z-50">
