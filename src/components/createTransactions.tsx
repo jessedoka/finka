@@ -1,63 +1,125 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { Button } from "./ui/button"
+import {
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "./ui/form"
+import { Input } from "./ui/input"
+import { useState } from 'react';
 import { api } from "~/trpc/react";
+import { useRouter } from 'next/navigation';
+import { useToast } from "./ui/use-toast";
 
-export function CreateTransaction({ id }: { id: string | undefined }) {
+const formSchema = z.object({
+    memo: z.string().min(2, {
+        message: "memo must be at least 2 characters.",
+    }),
+    amount: z.number(),
+    accountId: z.number()
+})
+
+export function CreateTransaction({ id }: { id: number }) {
     const router = useRouter();
-    const [memo, setMemo] = useState("");
-    const [amount, setAmount] = useState(0);
-    const [accountId, setAccountId] = useState(0);
+    const { toast } = useToast();
+    const [isVisible, setIsVisible] = useState(false);
+
+    const toggleOverlay = () => {
+        setIsVisible(!isVisible);
+    };
 
     const CreateTransaction = api.transaction.create.useMutation({
         onSuccess: () => {
             router.refresh();
-            setMemo("");
-            setAmount(0);
-            setAccountId(0);
+            toast({
+                title: "Transaction created",
+                description: "The transaction has been created successfully",
+            })
         },
-    });
+        onError: (error) => {
+            toast({
+                title: "Transaction creation failed",
+                description: error.message
+            })
+        }
+    })
+
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            memo: "",
+            amount: 0,
+            accountId: 0,
+        },
+    })
+
+    function onSubmit(data: z.infer<typeof formSchema>) {
+        CreateTransaction.mutate({ memo: data.memo, amount: data.amount, accountId: id });
+        toggleOverlay();
+    }
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Convert the input value to an integer before passing it to the onChange handler
+        if (isNaN(parseInt(e.target.value, 10))) {
+            return;
+        }
+        
+        const intValue = parseInt(e.target.value, 10);
+        form.setValue("amount", intValue);
+    };
     
 
     return (
-        <div>
-            <form
-                onSubmit={(e) => {
-                    e.preventDefault();
-                    CreateTransaction.mutate({ memo, amount, accountId });
-                }}
-                className="flex flex-col gap-2"
-            >
-                <input
-                    type="text"
-                    placeholder="memo"
-                    value={memo}
-                    onChange={(e) => setMemo(e.target.value)}
-                    className="w-full rounded-full px-4 py-2 text-black"
-                />
-                <input
-                    type="number"
-                    placeholder="Amount"
-                    value={amount}
-                    onChange={(e) => setAmount(parseFloat(e.target.value))}
-                    className="w-full rounded-full px-4 py-2 text-black"
-                />
-                <input
-                    type="number"
-                    placeholder="Account ID"
-                    value={accountId}
-                    onChange={(e) => setAccountId(parseFloat(e.target.value))}
-                    className="w-full rounded-full px-4 py-2 text-black"
-                />
-                <button
-                    type="submit"
-                    className="rounded-full bg-white/10 px-10 py-3 font-semibold transition hover:bg-white/20"
-                    disabled={CreateTransaction.isPending}
-                >
-                    {CreateTransaction.isPending ? "Submitting..." : "Submit"}
-                </button>
-            </form>
+        <div className='ml-auto'>
+            <Button size="sm" onClick={toggleOverlay}>Add Transactions</Button>
+
+            {isVisible && (
+                <div className="fixed inset-0 flex items-center justify-center z-50">
+                    <div className="fixed inset-0 bg-black opacity-80 backdrop-blur-sm"></div>
+                    <div className="relative z-10 bg-secondary p-4 rounded shadow-lg">
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                                <FormField
+                                    control={form.control}
+                                    name="memo"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Memo</FormLabel>
+                                            <Input {...field} />
+                                            <FormDescription>Enter a memo for the transaction</FormDescription>
+                                            <FormMessage {...field} />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="amount"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Amount</FormLabel>
+                                            <Input  {...field} value={String(field.value)} onChange={handleInputChange} />
+                                            <FormDescription>Enter the amount for the transaction</FormDescription>
+                                            <FormMessage {...field} />
+                                        </FormItem>
+                                    )}
+                                />
+                                <div className="flex justify-between gap-4">
+                                    <Button variant="ghost" type="submit">Submit</Button>
+                                    <Button variant="destructive" onClick={toggleOverlay}>Close</Button>
+                                </div>
+                            </form>
+                        </Form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

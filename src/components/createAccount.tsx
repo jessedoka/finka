@@ -26,7 +26,7 @@ const formSchema = z.object({
 })
 
 
-export function CreateAccount({id}: {id: string | undefined}) {
+export function CreateAccount({ id }: { id: string | undefined }) {
     const router = useRouter();
     const { toast } = useToast();
     const [isVisible, setIsVisible] = useState(false);
@@ -51,8 +51,6 @@ export function CreateAccount({id}: {id: string | undefined}) {
         }
     })
 
-
-    // 1. Define your form.
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -60,7 +58,6 @@ export function CreateAccount({id}: {id: string | undefined}) {
         },
     })
 
-    // 2. Define a submit handler.
     function onSubmit(values: z.infer<typeof formSchema>) {
         createAccount.mutate({ name: values.name, user_id: id});
         toggleOverlay();
