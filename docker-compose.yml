@@ -1,0 +1,35 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://finka:finka@db:5432/finka_dev
+      - COGNITO_USER_POOL_ID=local
+      - COGNITO_APP_CLIENT_ID=local
+      - ENVIRONMENT=development
+    volumes:
+      - ./api:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  db:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=finka
+      - POSTGRES_PASSWORD=finka
+      - POSTGRES_DB=finka_dev
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finka -d finka_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
