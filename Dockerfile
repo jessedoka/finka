@@ -8,7 +8,6 @@ WORKDIR /app
 COPY api/pyproject.toml api/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
-# Stage 2: production image
 FROM python:3.13-slim
 
 WORKDIR /app
