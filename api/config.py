@@ -1,3 +1,4 @@
+from pathlib import Path
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -7,7 +8,7 @@ class Settings(BaseSettings):
     cognito_app_client_id: str = "local"
     aws_region: str = "eu-west-2"
 
-    class Config: 
-        env_file = ".env"
+    class Config:
+        env_file = Path(__file__).parent.parent / ".env"
 
 settings = Settings()
