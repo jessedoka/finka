@@ -9,6 +9,6 @@ class Settings(BaseSettings):
     aws_region: str = "eu-west-2"
 
     class Config:
-        env_file = Path(__file__).parent.parent / ".env"
+        env_file = Path(__file__).parent / ".env"
 
 settings = Settings()

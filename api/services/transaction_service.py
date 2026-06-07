@@ -1,8 +1,6 @@
 from uuid import UUID
 from query_selectors.transaction_selector import TransactionSelector
-from datetime import date
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload 
+from sqlalchemy.ext.asyncio import AsyncSession 
 from schemas.transaction import TransactionCreate
 from models.transaction import Transaction
 

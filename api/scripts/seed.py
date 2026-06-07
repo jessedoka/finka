@@ -1,5 +1,4 @@
 import asyncio
-import uuid
 import random
 from datetime import date, timedelta
 from decimal import Decimal
