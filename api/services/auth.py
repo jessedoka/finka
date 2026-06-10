@@ -12,7 +12,7 @@ from config import settings
 URI = f"https://cognito-idp.{settings.aws_region}.amazonaws.com/{settings.cognito_user_pool_id}/.well-known/jwks.json"
 ISS = f"https://cognito-idp.{settings.aws_region}.amazonaws.com/{settings.cognito_user_pool_id}"
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=(settings.environment != 'development'))
 jwt_client = PyJWKClient(URI)
 ALGORITHM = "RS256"
 
