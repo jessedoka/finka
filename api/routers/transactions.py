@@ -8,7 +8,6 @@ from services.auth import get_current_user
 from models.user import User
 from services.transaction_service import TransactionService
 from schemas.transaction import TransactionCreate, TransactionResponse, TransactionUpdate
-from models.transaction import Transaction
 
 router = APIRouter(prefix="/api/transactions", tags=["transactions"])
 
