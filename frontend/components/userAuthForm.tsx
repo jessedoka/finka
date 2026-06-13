@@ -4,7 +4,6 @@ import Link from "next/link"
 import { useState } from "react"
 import { SubmitButton } from "./submit-button"
 import { Button } from "./ui/button"
-import { login, signup } from "./auth"
 import { useContext } from "react";
 import { useRouter } from "next/navigation"
 import { AuthContext, authType } from "@/context/auth"
@@ -66,9 +65,9 @@ function UserAuthForm({ searchParams }: AuthProps) {
                             <div className="flex items-center justify-between">
                                 <Link href="#" className="text-sm font-medium text-orange-600 hover:underline dark:text-orange-500">Forgot password?</Link>
                             </div>
-                            <SubmitButton formAction={login} pendingText="Loading">
+                            {/* <SubmitButton formAction={login} pendingText="Loading">
                                 Sign in
-                            </SubmitButton>
+                            </SubmitButton> */}
 
                             <Button onClick={toggleAuth}>
                                 <p className="text-sm font-light text-gray-500 dark:text-gray-400">
@@ -115,9 +114,9 @@ function UserAuthForm({ searchParams }: AuthProps) {
                                     <label className="font-light text-gray-500 dark:text-gray-300">I accept the <Link className="font-medium text-primary-600 hover:underline dark:text-primary-500" href="#">Terms and Conditions</Link></label>
                                 </div>
                             </div>
-                            <SubmitButton formAction={signup} pendingText="Loading">
+                            {/* <SubmitButton formAction={signup} pendingText="Loading">
                                 Sign up
-                            </SubmitButton>
+                            </SubmitButton> */}
 
                             <Button onClick={toggleAuth}>
                                 <p className="text-sm font-light text-gray-500">

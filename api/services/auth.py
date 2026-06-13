@@ -48,11 +48,13 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: As
     try:
         signed_key = jwt_client.get_signing_key_from_jwt(token)
         payload = decode(token, signed_key.key, algorithms=[ALGORITHM])
-        sub = payload.get("sub")
-        if sub is None:
-            raise credentials_exception
-
+       
         if payload.get('iss') != ISS or payload.get('client_id') != settings.cognito_app_client_id or payload.get('token_use') != "access":
+            raise credentials_exception
+        
+        sub = payload.get("sub")
+
+        if sub is None:
             raise credentials_exception
         
         user = await user_service.get_user(sub)
