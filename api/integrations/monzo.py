@@ -68,8 +68,14 @@ class MonzoClient:
         return await self._get("/balance", params={"account_id": self.account_id})
 
     async def total_gbp(self) -> Decimal:
-        """The configured account's total balance (includes Pots) in GBP."""
+        """Pots only, in GBP — excludes the spendable current account.
+
+        pots = total_balance - balance (total_balance = current account + pots).
+        We deliberately drop the current-account portion: for net-worth/long-term
+        savings we only want money set aside in pots.
+        """
         bal = await self.fetch_balance()
-        # total_balance includes Pots; fall back to plain balance if absent.
-        minor = bal.get("total_balance", bal.get("balance", 0))
-        return Decimal(str(minor)) / Decimal("100")
+        total = Decimal(str(bal.get("total_balance", bal.get("balance", 0))))
+        current = Decimal(str(bal.get("balance", 0)))
+        pots_minor = max(total - current, Decimal("0"))
+        return pots_minor / Decimal("100")
