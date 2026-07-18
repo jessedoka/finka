@@ -31,7 +31,10 @@ export function StatStrip() {
 
     return (
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-xl bg-card px-5 py-3 text-sm shadow-sm ring-1 ring-foreground/5">
-            <Stat label="Total" value={gbp.format(data.cash.total)} />
+            <span className="rounded-md bg-muted px-2 py-0.5 text-xs font-semibold tracking-wide text-muted-foreground">
+                Trading212
+            </span>
+            <Stat label="Value" value={gbp.format(data.cash.total)} />
             <div className="hidden h-4 w-px bg-border sm:block" />
             <Stat label="Invested" value={gbp.format(data.cash.invested)} />
             <div className="hidden h-4 w-px bg-border sm:block" />

@@ -26,8 +26,17 @@ export function NetWorthBreakdown() {
 
     return (
         <Card className="h-full">
-            <CardHeader className="border-b">
-                <CardTitle className="text-base">Net Worth</CardTitle>
+            <CardHeader className="flex-row items-center justify-between border-b">
+                <CardTitle className="text-base">By Source</CardTitle>
+                {data?.date && (
+                    <span className="text-xs text-muted-foreground">
+                        as of{" "}
+                        {new Date(data.date).toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "short",
+                        })}
+                    </span>
+                )}
             </CardHeader>
             <CardContent className="space-y-5">
                 {isLoading && <p className="text-muted-foreground">Loading…</p>}
@@ -41,22 +50,6 @@ export function NetWorthBreakdown() {
 
                 {data && entries.length > 0 && (
                     <>
-                        <div>
-                            <div className="font-mono text-3xl font-semibold tracking-tight tabular-nums">
-                                {gbp.format(data.net_worth ?? total)}
-                            </div>
-                            {data.date && (
-                                <p className="text-xs text-muted-foreground">
-                                    as of{" "}
-                                    {new Date(data.date).toLocaleDateString("en-GB", {
-                                        day: "numeric",
-                                        month: "short",
-                                        year: "numeric",
-                                    })}
-                                </p>
-                            )}
-                        </div>
-
                         <div className="space-y-3">
                             {entries.map(([key, value], i) => {
                                 const alloc = value / total

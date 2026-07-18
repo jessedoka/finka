@@ -6,8 +6,8 @@ import { TrendingDownIcon, TrendingUpIcon } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { PortfolioChart } from "@/components/portfolio-chart"
 import {
+    fetchBreakdown,
     fetchNetWorthSeries,
-    fetchT212Summary,
     gbp,
     pct,
     type SnapshotPoint,
@@ -31,16 +31,24 @@ function seriesForRange(series: SnapshotPoint[], days: number) {
 export function PortfolioOverview() {
     const [range, setRange] = useState<(typeof RANGES)[number]["label"]>("1M")
 
-    const summary = useQuery({ queryKey: ["t212-summary"], queryFn: fetchT212Summary })
     const history = useQuery({ queryKey: ["net-worth-series"], queryFn: fetchNetWorthSeries })
+    const breakdown = useQuery({ queryKey: ["net-worth-breakdown"], queryFn: fetchBreakdown })
 
     const activeRange = RANGES.find((r) => r.label === range)!
+    const allPoints = useMemo(
+        () => seriesForRange(history.data ?? [], Infinity),
+        [history.data],
+    )
     const points = useMemo(
         () => seriesForRange(history.data ?? [], activeRange.days),
         [history.data, activeRange.days],
     )
 
-    const total = summary.data?.cash.total ?? points[points.length - 1]?.value ?? 0
+    // Headline is the LIVE net worth (snapshot providers + current manual
+    // accounts), so an account you just edited shows up immediately; the chart
+    // and change badge come from the historical snapshot series.
+    const total =
+        breakdown.data?.net_worth ?? allPoints[allPoints.length - 1]?.value ?? 0
     const first = points[0]?.value
     const last = points[points.length - 1]?.value
     const change = first !== undefined && last !== undefined ? last - first : 0
@@ -53,10 +61,10 @@ export function PortfolioOverview() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="space-y-2">
                         <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
-                            My Portfolio
+                            Net Worth
                         </p>
                         <div className="font-mono text-4xl font-semibold tracking-tight tabular-nums md:text-5xl">
-                            {summary.isLoading ? (
+                            {breakdown.isLoading ? (
                                 <span className="text-muted-foreground">£—</span>
                             ) : (
                                 gbp.format(total)

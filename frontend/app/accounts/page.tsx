@@ -92,10 +92,11 @@ export default function AccountsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">Accounts</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight">Manual Accounts</h1>
                     <p className="text-sm text-muted-foreground">
-                        Manual balances (pension, savings) that feed your net worth. Live-connected
-                        providers (Trading212, Monzo, Coinbase) are tracked automatically.
+                        Balances you keep up to date by hand (pension, savings) that feed your net
+                        worth. Live-connected providers (Trading212, Monzo, Coinbase) are tracked
+                        automatically.
                     </p>
                 </div>
                 <div className="text-right">

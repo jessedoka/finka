@@ -11,7 +11,7 @@ const menu = [
         href: "/dashboard",
     },
     {
-        title: "Accounts",
+        title: "Manual Accounts",
         icon: PackageIcon,
         href: "/accounts",
     },
