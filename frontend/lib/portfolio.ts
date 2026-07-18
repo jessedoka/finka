@@ -133,6 +133,23 @@ export async function fetchProjection(years: number): Promise<Projection> {
     return res.json()
 }
 
+// Fetches the full data export and triggers a browser download of the JSON file.
+export async function downloadExport(): Promise<void> {
+    const res = await fetch("http://localhost:8000/api/export/")
+    if (!res.ok) throw new Error("Failed to export data")
+
+    const blob = await res.blob()
+    const stamp = new Date().toISOString().slice(0, 10)
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `finka-export-${stamp}.json`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    URL.revokeObjectURL(url)
+}
+
 // Friendly labels for breakdown keys ("trading212", "account:Tembo", ...).
 const SOURCE_LABELS: Record<string, string> = {
     trading212: "Trading212",

@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { HomeIcon, Package2Icon, PackageIcon, UsersIcon } from "lucide-react"
+import { ExportButton } from "@/components/export-button"
 
 const menu = [
     {
@@ -39,6 +40,9 @@ export default function Sidebar() {
                         </Link>
                     ))}
                 </nav>
+            </div>
+            <div className="border-t p-4">
+                <ExportButton />
             </div>
         </div>
     )
