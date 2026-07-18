@@ -1,5 +1,4 @@
 import Sidebar from "@/components/sidebar"
-import Navigation from "@/components/navigation"
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
     return (
@@ -8,7 +7,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <Sidebar />
             </div>
             <div className="flex flex-col">
-                <Navigation />
                 <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
                     {children}
                 </main>

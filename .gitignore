@@ -13,3 +13,4 @@ SETUP.md
 .vscode/settings.json
 api/uv.lock
 frontend/AGENTS.md
+dev.sh

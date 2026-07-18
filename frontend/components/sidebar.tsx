@@ -14,12 +14,7 @@ const menu = [
         title: "Manual Accounts",
         icon: PackageIcon,
         href: "/accounts",
-    },
-    {
-        title: "All Transactions",
-        icon: UsersIcon,
-        href: "#",
-    },
+    }
 ]
 
 
