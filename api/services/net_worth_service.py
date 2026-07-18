@@ -5,11 +5,14 @@ time" endpoint. The history chart is therefore built from snapshots WE record �
 one row per day — that accumulate going forward. Day one is a single point; it
 becomes a real line over time.
 
-Phase 0 scope: only Trading212 is connected, so total_assets = the T212 account
-`total`. When Monzo/Coinbase/etc. land, sum their balances here instead and put
-the per-source split in `breakdown`.
+Sources are aggregated in `_collect_balances`: each connected provider
+(Trading212, Coinbase, Monzo) plus any active manual Account rows contributes a
+GBP figure. total_assets is their sum; the per-source split is stored in
+`breakdown`. A provider that isn't configured is skipped; one that errors is
+logged and contributes 0 rather than sinking the whole snapshot.
 """
 
+import logging
 from datetime import date
 from decimal import Decimal
 from uuid import UUID
@@ -17,22 +20,64 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from integrations.trading212 import Trading212Client
+from integrations.coinbase import CoinbaseClient, CoinbaseError
+from integrations.monzo import MonzoClient, MonzoError
+from integrations.trading212 import Trading212Client, Trading212Error
+from models.account import Account
 from models.net_worth_snapshot import NetWorthSnapshot
+
+logger = logging.getLogger(__name__)
 
 
 class NetWorthService:
     def __init__(self, db: AsyncSession) -> None:
         self.db = db
 
+    async def _collect_balances(self, user_id: UUID) -> dict[str, Decimal]:
+        """One GBP figure per connected source. Missing sources are omitted."""
+        breakdown: dict[str, Decimal] = {}
+
+        # Trading212 — the only source that must be present (Phase 0 baseline).
+        try:
+            cash = await Trading212Client().fetch_cash()
+            breakdown["trading212"] = Decimal(str(cash["total"]))
+        except (Trading212Error, KeyError) as e:
+            logger.warning("Trading212 balance unavailable: %s", e)
+
+        coinbase = CoinbaseClient()
+        if coinbase.configured:
+            try:
+                breakdown["coinbase"] = await coinbase.total_gbp()
+            except CoinbaseError as e:
+                logger.warning("Coinbase balance unavailable: %s", e)
+
+        monzo = MonzoClient()
+        if monzo.configured:
+            try:
+                breakdown["monzo"] = await monzo.total_gbp()
+            except MonzoError as e:
+                logger.warning("Monzo balance unavailable: %s", e)
+
+        # Manual accounts (Peoples Pension, Tembo, ...): balances the user keeps
+        # up to date by hand. Grouped under the account name.
+        accounts = await self.db.scalars(
+            select(Account).where(Account.user_id == user_id, Account.is_active.is_(True))
+        )
+        for acct in accounts:
+            key = f"account:{acct.name}"
+            breakdown[key] = breakdown.get(key, Decimal("0")) + Decimal(str(acct.balance))
+
+        return breakdown
+
     async def record_snapshot(self, user_id: UUID) -> NetWorthSnapshot:
-        """Fetch today's T212 value and upsert one snapshot for today.
+        """Aggregate every connected source and upsert one snapshot for today.
 
         Upsert (not insert) so re-running on the same day overwrites rather than
         colliding with the uq_networth_user_date unique constraint.
         """
-        cash = await Trading212Client().fetch_cash()
-        total = Decimal(str(cash["total"]))
+        balances = await self._collect_balances(user_id)
+        total = sum(balances.values(), Decimal("0"))
+        breakdown = {k: float(v) for k, v in balances.items()}
 
         today = date.today()
         existing = await self.db.scalar(
@@ -42,7 +87,6 @@ class NetWorthService:
             )
         )
 
-        breakdown = {"trading212": float(total)}
         if existing is not None:
             existing.total_assets = total
             existing.net_worth = total
@@ -71,3 +115,12 @@ class NetWorthService:
             .order_by(NetWorthSnapshot.snapshot_date)
         )
         return list(result.scalars().all())
+
+    async def get_latest(self, user_id: UUID) -> NetWorthSnapshot | None:
+        """Most recent snapshot — its `breakdown` is the per-source split."""
+        return await self.db.scalar(
+            select(NetWorthSnapshot)
+            .where(NetWorthSnapshot.user_id == user_id)
+            .order_by(NetWorthSnapshot.snapshot_date.desc())
+            .limit(1)
+        )

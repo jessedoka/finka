@@ -1,11 +1,25 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
 from routers import transactions, accounts, categories, net_worth, trading212
+from services import scheduler
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    scheduler.start(app)
+    try:
+        yield
+    finally:
+        await scheduler.stop(app)
+
 
 app = FastAPI(
     title="Finka API",
-    description="Personal finance dashboard API"
+    description="Personal finance dashboard API",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
