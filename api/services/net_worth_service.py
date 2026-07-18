@@ -124,3 +124,36 @@ class NetWorthService:
             .order_by(NetWorthSnapshot.snapshot_date.desc())
             .limit(1)
         )
+
+    async def get_current_breakdown(self, user_id: UUID) -> dict:
+        """Live per-source split for the dashboard.
+
+        External providers (Trading212/Coinbase/Monzo) come from the latest
+        snapshot — re-fetching them every request would hit rate limits. Manual
+        accounts are cheap DB reads, so we take them LIVE: a balance you edit
+        shows up immediately, without waiting for the next daily snapshot.
+        """
+        snapshot = await self.get_latest(user_id)
+        # Keep only external-provider entries from the snapshot; drop its
+        # point-in-time account:* rows so the live ones below replace them.
+        breakdown: dict[str, float] = {}
+        snapshot_date = None
+        if snapshot is not None and snapshot.breakdown:
+            breakdown = {
+                k: v for k, v in snapshot.breakdown.items() if not k.startswith("account:")
+            }
+            snapshot_date = snapshot.snapshot_date.isoformat()
+
+        accounts = await self.db.scalars(
+            select(Account).where(Account.user_id == user_id, Account.is_active.is_(True))
+        )
+        for acct in accounts:
+            breakdown[f"account:{acct.name}"] = breakdown.get(
+                f"account:{acct.name}", 0.0
+            ) + float(acct.balance)
+
+        return {
+            "date": snapshot_date,
+            "net_worth": sum(breakdown.values()),
+            "breakdown": breakdown,
+        }

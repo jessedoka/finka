@@ -37,12 +37,5 @@ async def net_worth_breakdown(
     user: Annotated[User, Depends(get_current_user)],
     service: Annotated[NetWorthService, Depends(get_service)],
 ):
-    """Per-source split from the latest snapshot (cheap: no live API calls)."""
-    snapshot = await service.get_latest(user.id)
-    if snapshot is None:
-        return {"date": None, "net_worth": None, "breakdown": {}}
-    return {
-        "date": snapshot.snapshot_date.isoformat(),
-        "net_worth": float(snapshot.net_worth) if snapshot.net_worth is not None else None,
-        "breakdown": snapshot.breakdown or {},
-    }
+    """Live per-source split: snapshot providers + current manual accounts."""
+    return await service.get_current_breakdown(user.id)
