@@ -5,3 +5,11 @@ pgdata/
 .mypy_cache
 .ruff_cache/
 plan-v1.md
+
+.DS_Store
+ARCHITECTURE.md
+CLAUDE.md
+SETUP.md
+.vscode/settings.json
+api/uv.lock
+frontend/AGENTS.md
