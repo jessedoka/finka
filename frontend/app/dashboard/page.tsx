@@ -1,9 +1,6 @@
 "use client"
 
-import { useContext, useEffect } from "react"
 import { useQuery } from "@tanstack/react-query"
-import { useRouter } from "next/navigation"
-import { AuthContext } from "@/context/auth"
 import {
     Table,
     TableBody,
@@ -12,6 +9,11 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { PortfolioOverview } from "@/components/portfolio-overview"
+import { PortfolioStats } from "@/components/portfolio-stats"
+import { StatStrip } from "@/components/stat-strip"
+import { gbp } from "@/lib/portfolio"
 
 type Transaction = {
     id: number
@@ -24,61 +26,115 @@ type Transaction = {
     category_name: string | null
 }
 
-async function fetchTransactions(token: string): Promise<Transaction[]> {
-    const res = await fetch("http://localhost:8000/api/transactions/", {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    })
+async function fetchTransactions(): Promise<Transaction[]> {
+    // Auth is stubbed in local dev (backend resolves the dev user), so no token is sent.
+    const res = await fetch("http://localhost:8000/api/transactions/")
     if (!res.ok) throw new Error("Failed to fetch transactions")
     return res.json()
 }
 
+function formatDate(value: string) {
+    const d = new Date(value)
+    if (Number.isNaN(d.getTime())) return value
+    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+}
+
 export default function DashboardPage() {
-    const { token } = useContext(AuthContext)
-    const router = useRouter()
-
-    useEffect(() => {
-        if (!token) router.push("/login")
-    }, [token, router])
-
     const { data, isLoading, isError } = useQuery({
         queryKey: ["transactions"],
-        queryFn: () => fetchTransactions(token!),
-        enabled: !!token,
+        queryFn: fetchTransactions,
     })
 
-    if (!token) return null
-    if (isLoading) return <p className="text-muted-foreground">Loading transactions...</p>
-    if (isError) return <p className="text-destructive">Failed to load transactions.</p>
-
     return (
-        <div>
-            <h1 className="text-2xl font-semibold mb-6">Transactions</h1>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Merchant</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {data?.map((tx) => (
-                        <TableRow key={tx.id}>
-                            <TableCell>{tx.transaction_date}</TableCell>
-                            <TableCell>{tx.description}</TableCell>
-                            <TableCell>{tx.merchant_name ?? "—"}</TableCell>
-                            <TableCell>{tx.category_name ?? "—"}</TableCell>
-                            <TableCell className="text-right font-mono">
-                                {parseFloat(tx.amount).toFixed(2)}
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+        <div className="space-y-6">
+            <StatStrip />
+
+            <div className="grid gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-2">
+                    <PortfolioOverview />
+                </div>
+                <div className="lg:col-span-1">
+                    <PortfolioStats />
+                </div>
+            </div>
+
+            <Card>
+                <CardHeader className="border-b">
+                    <CardTitle className="text-base">Recent Transactions</CardTitle>
+                </CardHeader>
+                <CardContent className="px-0">
+                    {isLoading && (
+                        <p className="px-8 py-6 text-muted-foreground">Loading transactions…</p>
+                    )}
+                    {isError && (
+                        <p className="px-8 py-6 text-destructive">Failed to load transactions.</p>
+                    )}
+                    {data && data.length === 0 && (
+                        <p className="px-8 py-6 text-muted-foreground">No transactions yet.</p>
+                    )}
+                    {data && data.length > 0 && (
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="hover:bg-transparent">
+                                    <TableHead className="px-8 text-xs tracking-wide uppercase">
+                                        Date
+                                    </TableHead>
+                                    <TableHead className="text-xs tracking-wide uppercase">
+                                        Description
+                                    </TableHead>
+                                    <TableHead className="text-xs tracking-wide uppercase">
+                                        Merchant
+                                    </TableHead>
+                                    <TableHead className="text-xs tracking-wide uppercase">
+                                        Category
+                                    </TableHead>
+                                    <TableHead className="px-8 text-right text-xs tracking-wide uppercase">
+                                        Amount
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {data.map((tx) => {
+                                    const amount = parseFloat(tx.amount)
+                                    const negative = amount < 0
+                                    return (
+                                        <TableRow key={tx.id}>
+                                            <TableCell className="px-8 whitespace-nowrap text-muted-foreground">
+                                                {formatDate(tx.transaction_date)}
+                                            </TableCell>
+                                            <TableCell className="font-medium">
+                                                {tx.description}
+                                            </TableCell>
+                                            <TableCell className="text-muted-foreground">
+                                                {tx.merchant_name ?? "—"}
+                                            </TableCell>
+                                            <TableCell>
+                                                {tx.category_name ? (
+                                                    <span className="inline-flex rounded-md bg-muted px-2 py-0.5 text-xs font-medium">
+                                                        {tx.category_name}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-muted-foreground">—</span>
+                                                )}
+                                            </TableCell>
+                                            <TableCell
+                                                className={`px-8 text-right font-mono tabular-nums ${
+                                                    negative
+                                                        ? "text-foreground"
+                                                        : "text-emerald-600 dark:text-emerald-400"
+                                                }`}
+                                            >
+                                                {negative ? "" : "+"}
+                                                {gbp.format(amount)}
+                                            </TableCell>
+                                        </TableRow>
+                                    )
+                                })}
+                            </TableBody>
+                        </Table>
+                    )}
+                </CardContent>
+            </Card>
         </div>
     )
 }

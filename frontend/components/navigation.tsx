@@ -14,11 +14,11 @@ export default function Navigation() {
             <div className="w-full flex-1">
                 <form>
                     <div className="relative">
-                        <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         <Input
                             type="search"
                             placeholder="Search accounts..."
-                            className="w-full bg-background shadow-none appearance-none pl-8 md:w-2/3 lg:w-1/3"
+                            className="w-full appearance-none rounded-lg border border-input bg-background px-3 pl-9 shadow-none md:w-2/3 lg:w-1/3"
                         />
                     </div>
                 </form>
