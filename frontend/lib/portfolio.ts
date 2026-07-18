@@ -41,6 +41,81 @@ export async function fetchNetWorthSeries(): Promise<SnapshotPoint[]> {
     return res.json()
 }
 
+export type Breakdown = {
+    date: string | null
+    net_worth: number | null
+    breakdown: Record<string, number>
+}
+
+export async function fetchBreakdown(): Promise<Breakdown> {
+    const res = await fetch("http://localhost:8000/api/net-worth/breakdown")
+    if (!res.ok) throw new Error("Failed to fetch net-worth breakdown")
+    return res.json()
+}
+
+export type Account = {
+    id: number
+    name: string
+    account_type: string
+    currency: string
+    institution: string | null
+    balance: string
+    is_active: boolean
+}
+
+export type AccountInput = {
+    name: string
+    account_type: string
+    institution?: string | null
+    balance: string
+    is_active?: boolean
+}
+
+const ACCOUNTS_URL = "http://localhost:8000/api/accounts/"
+
+export async function fetchAccounts(): Promise<Account[]> {
+    const res = await fetch(ACCOUNTS_URL)
+    if (!res.ok) throw new Error("Failed to fetch accounts")
+    return res.json()
+}
+
+export async function createAccount(input: AccountInput): Promise<Account> {
+    const res = await fetch(ACCOUNTS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+    })
+    if (!res.ok) throw new Error("Failed to create account")
+    return res.json()
+}
+
+export async function updateAccount(id: number, patch: Partial<AccountInput>): Promise<Account> {
+    const res = await fetch(`http://localhost:8000/api/accounts/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+    })
+    if (!res.ok) throw new Error("Failed to update account")
+    return res.json()
+}
+
+export async function deleteAccount(id: number): Promise<void> {
+    const res = await fetch(`http://localhost:8000/api/accounts/${id}`, { method: "DELETE" })
+    if (!res.ok) throw new Error("Failed to delete account")
+}
+
+// Friendly labels for breakdown keys ("trading212", "account:Tembo", ...).
+const SOURCE_LABELS: Record<string, string> = {
+    trading212: "Trading212",
+    coinbase: "Coinbase",
+    monzo: "Monzo",
+}
+
+export function sourceLabel(key: string): string {
+    if (key.startsWith("account:")) return key.slice("account:".length)
+    return SOURCE_LABELS[key] ?? key
+}
+
 export const gbp = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" })
 
 export const gbpCompact = new Intl.NumberFormat("en-GB", {

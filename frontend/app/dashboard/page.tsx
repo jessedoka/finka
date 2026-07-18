@@ -9,11 +9,15 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { PortfolioOverview } from "@/components/portfolio-overview"
 import { PortfolioStats } from "@/components/portfolio-stats"
+import { NetWorthBreakdown } from "@/components/net-worth-breakdown"
 import { StatStrip } from "@/components/stat-strip"
 import { gbp } from "@/lib/portfolio"
+
+const RECENT_LIMIT = 10
 
 type Transaction = {
     id: number
@@ -45,6 +49,8 @@ export default function DashboardPage() {
         queryFn: fetchTransactions,
     })
 
+    const recent = data?.slice(0, RECENT_LIMIT) ?? []
+
     return (
         <div className="space-y-6">
             <StatStrip />
@@ -54,15 +60,28 @@ export default function DashboardPage() {
                     <PortfolioOverview />
                 </div>
                 <div className="lg:col-span-1">
-                    <PortfolioStats />
+                    <NetWorthBreakdown />
                 </div>
             </div>
 
-            <Card>
-                <CardHeader className="border-b">
-                    <CardTitle className="text-base">Recent Transactions</CardTitle>
-                </CardHeader>
-                <CardContent className="px-0">
+            <div className="grid gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-1">
+                    <PortfolioStats />
+                </div>
+
+                <Card className="lg:col-span-2">
+                    <CardHeader className="flex-row items-center justify-between border-b">
+                        <CardTitle className="text-base">Recent Transactions</CardTitle>
+                        {data && data.length > RECENT_LIMIT && (
+                            <Link
+                                href="#"
+                                className="text-xs font-medium text-muted-foreground hover:text-foreground"
+                            >
+                                {data.length} total
+                            </Link>
+                        )}
+                    </CardHeader>
+                    <CardContent className="px-0">
                     {isLoading && (
                         <p className="px-8 py-6 text-muted-foreground">Loading transactions…</p>
                     )}
@@ -94,7 +113,7 @@ export default function DashboardPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {data.map((tx) => {
+                                {recent.map((tx) => {
                                     const amount = parseFloat(tx.amount)
                                     const negative = amount < 0
                                     return (
@@ -133,8 +152,9 @@ export default function DashboardPage() {
                             </TableBody>
                         </Table>
                     )}
-                </CardContent>
-            </Card>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     )
 }
