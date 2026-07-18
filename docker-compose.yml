@@ -8,6 +8,8 @@ services:
       - COGNITO_USER_POOL_ID=local
       - COGNITO_APP_CLIENT_ID=local
       - ENVIRONMENT=development
+      # Substituted from the root .env at `docker compose up` time.
+      - TRADING_212_KEY=${TRADING_212_KEY:-}
     volumes:
       - ./api:/app
     depends_on:
