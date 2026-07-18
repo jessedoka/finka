@@ -144,16 +144,23 @@ class NetWorthService:
             }
             snapshot_date = snapshot.snapshot_date.isoformat()
 
+        long_term_keys: list[str] = []
         accounts = await self.db.scalars(
             select(Account).where(Account.user_id == user_id, Account.is_active.is_(True))
         )
         for acct in accounts:
-            breakdown[f"account:{acct.name}"] = breakdown.get(
-                f"account:{acct.name}", 0.0
-            ) + float(acct.balance)
+            key = f"account:{acct.name}"
+            breakdown[key] = breakdown.get(key, 0.0) + float(acct.balance)
+            if acct.is_long_term:
+                long_term_keys.append(key)
+
+        net_worth = sum(breakdown.values())
+        spendable = sum(v for k, v in breakdown.items() if k not in long_term_keys)
 
         return {
             "date": snapshot_date,
-            "net_worth": sum(breakdown.values()),
+            "net_worth": net_worth,
+            "spendable": spendable,
+            "long_term_keys": long_term_keys,
             "breakdown": breakdown,
         }

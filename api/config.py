@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     monzo_access_token: str = ""
     monzo_account_id: str = ""
     monzo_user_id: str = ""  # reserved for future /transactions use; unused for balance
+    # Projection assumptions for Monzo pots (a live source, so not a manual Account).
+    # growth_rate is a fraction: 0.02 = 2%/yr.
+    monzo_pots_monthly_contribution: float = 0.0
+    monzo_pots_growth_rate: float = 0.0
 
     # Daily net-worth snapshot scheduler (in-container). Time is local 24h HH:MM.
     snapshot_scheduler_enabled: bool = True
