@@ -1,0 +1,44 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://finka:finka@db:5432/finka_dev
+      - COGNITO_USER_POOL_ID=local
+      - COGNITO_APP_CLIENT_ID=local
+      - ENVIRONMENT=development
+      # Substituted from the root .env at `docker compose up` time.
+      - TRADING_212_KEY=${TRADING_212_KEY:-}
+      - MONZO_ACCESS_TOKEN=${MONZO_ACCESS_TOKEN:-}
+      - MONZO_ACCOUNT_ID=${MONZO_ACCOUNT_ID:-}
+      - MONZO_USER_ID=${MONZO_USER_ID:-}
+      - MONZO_POTS_MONTHLY_CONTRIBUTION=${MONZO_POTS_MONTHLY_CONTRIBUTION:-0}
+      - MONZO_POTS_GROWTH_RATE=${MONZO_POTS_GROWTH_RATE:-0}
+      - COINBASE_API_KEY_NAME=${COINBASE_API_KEY_NAME:-}
+      - COINBASE_API_PRIVATE_KEY=${COINBASE_API_PRIVATE_KEY:-}
+    volumes:
+      - ./api:/app
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  db:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=finka
+      - POSTGRES_PASSWORD=finka
+      - POSTGRES_DB=finka_dev
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U finka -d finka_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

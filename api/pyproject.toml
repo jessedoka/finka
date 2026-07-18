@@ -1,0 +1,30 @@
+[project]
+name = "api"
+version = "0.1.0"
+description = "Finka API"
+requires-python = ">=3.11,<3.14"
+dependencies = [
+    "fastapi[standard]>=0.115.0",
+    "uvicorn[standard]==0.34.0",
+    "sqlalchemy[asyncio]==2.0.36",
+    "asyncpg==0.30.0",
+    "pydantic==2.10.4",
+    "pydantic-settings==2.7.1",
+    "alembic==1.14.1",
+    "httpx==0.28.1",
+    "python-jose[cryptography]==3.3.0",
+    "pyjwt>=2.13.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==8.3.4",
+    "pytest-asyncio==0.25.0",
+    "httpx==0.28.1",
+    "ruff==0.8.6",
+    "mypy==1.14.1",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
