@@ -44,6 +44,8 @@ export async function fetchNetWorthSeries(): Promise<SnapshotPoint[]> {
 export type Breakdown = {
     date: string | null
     net_worth: number | null
+    spendable: number
+    long_term_keys: string[]
     breakdown: Record<string, number>
 }
 
@@ -61,6 +63,10 @@ export type Account = {
     institution: string | null
     balance: string
     is_active: boolean
+    is_long_term: boolean
+    monthly_contribution: string
+    annual_charge: string
+    growth_rate: string
 }
 
 export type AccountInput = {
@@ -69,6 +75,10 @@ export type AccountInput = {
     institution?: string | null
     balance: string
     is_active?: boolean
+    is_long_term?: boolean
+    monthly_contribution?: string
+    annual_charge?: string
+    growth_rate?: string
 }
 
 const ACCOUNTS_URL = "http://localhost:8000/api/accounts/"
@@ -102,6 +112,25 @@ export async function updateAccount(id: number, patch: Partial<AccountInput>): P
 export async function deleteAccount(id: number): Promise<void> {
     const res = await fetch(`http://localhost:8000/api/accounts/${id}`, { method: "DELETE" })
     if (!res.ok) throw new Error("Failed to delete account")
+}
+
+export type ProjectionPoint = {
+    date: string
+    value: number
+    breakdown: Record<string, number>
+}
+
+export type Projection = {
+    years: number
+    series: ProjectionPoint[]
+    contributed: number
+    growth: number
+}
+
+export async function fetchProjection(years: number): Promise<Projection> {
+    const res = await fetch(`http://localhost:8000/api/net-worth/projection?years=${years}`)
+    if (!res.ok) throw new Error("Failed to fetch projection")
+    return res.json()
 }
 
 // Friendly labels for breakdown keys ("trading212", "account:Tembo", ...).
