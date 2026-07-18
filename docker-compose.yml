@@ -10,6 +10,11 @@ services:
       - ENVIRONMENT=development
       # Substituted from the root .env at `docker compose up` time.
       - TRADING_212_KEY=${TRADING_212_KEY:-}
+      - MONZO_ACCESS_TOKEN=${MONZO_ACCESS_TOKEN:-}
+      - MONZO_ACCOUNT_ID=${MONZO_ACCOUNT_ID:-}
+      - MONZO_USER_ID=${MONZO_USER_ID:-}
+      - COINBASE_API_KEY_NAME=${COINBASE_API_KEY_NAME:-}
+      - COINBASE_API_PRIVATE_KEY=${COINBASE_API_PRIVATE_KEY:-}
     volumes:
       - ./api:/app
     depends_on:
