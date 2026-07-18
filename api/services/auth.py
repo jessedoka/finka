@@ -52,6 +52,8 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: As
         if payload.get('iss') != ISS or payload.get('client_id') != settings.cognito_app_client_id or payload.get('token_use') != "access":
             raise credentials_exception
         
+        # past this point we have verified the token. so if we get no user we just create it. 
+        
         sub = payload.get("sub")
 
         if sub is None:

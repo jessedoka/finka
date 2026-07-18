@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
-from routers import transactions, accounts, categories, net_worth
+from routers import transactions, accounts, categories, net_worth, trading212
 
 app = FastAPI(
     title="Finka API",
@@ -20,6 +20,7 @@ app.include_router(transactions.router)
 app.include_router(accounts.router)
 app.include_router(categories.router)
 app.include_router(net_worth.router)
+app.include_router(trading212.router)
 
 @app.get('/health')
 async def health_check():

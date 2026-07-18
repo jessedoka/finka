@@ -3,6 +3,7 @@ from query_selectors.transaction_selector import TransactionSelector
 from sqlalchemy.ext.asyncio import AsyncSession 
 from schemas.transaction import TransactionCreate
 from models.transaction import Transaction
+from config import settings
 
 class TransactionService: 
     def __init__(self, db: AsyncSession) -> None:
@@ -41,6 +42,9 @@ class TransactionService:
 
         await self.db.delete(tx)
         await self.db.commit()
+
+    async def generate_stock_data(self): 
+        pass
 
     async def _get_owned(self, tx_id: int, user_id: UUID):
         transactions = TransactionSelector(user_id).select_by_transaction(tx_id)
