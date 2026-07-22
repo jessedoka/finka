@@ -5,6 +5,8 @@ pgdata/
 .mypy_cache
 .ruff_cache/
 plan-v1.md
+plan-v2.md
+plan-self-hosted.md
 
 .DS_Store
 ARCHITECTURE.md
@@ -13,5 +15,15 @@ SETUP.md
 .vscode/settings.json
 api/uv.lock
 frontend/AGENTS.md
-dev.sh
 week.md
+
+# Personal backfill workspace: reconstructed price cache + one-off probe scripts.
+# NB: keep this specific — api/scripts also holds shipped tooling (seed.py,
+# seed_connections.py, monzo_auth.py) that must stay tracked.
+api/.cache/
+api/scripts/backfill/
+api/scripts/backfill_probe.py
+# Personal financial statements (never commit)
+*.pdf
+The People's Pension*.csv
+Statement-*.csv
