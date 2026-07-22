@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
@@ -35,6 +35,20 @@ async def list_net_worth(
         }
         for s in snapshots
     ]
+
+
+@router.post("/snapshot", status_code=status.HTTP_201_CREATED)
+async def record_snapshot(
+    user: Annotated[User, Depends(get_current_user)],
+    service: Annotated[NetWorthService, Depends(get_service)],
+):
+    """Re-poll every connected source now and record today's snapshot.
+
+    The daily scheduler does this on a timer; this lets the UI refresh on demand
+    (e.g. right after adding or fixing a connection) instead of waiting a day.
+    """
+    await service.record_snapshot(user.id)
+    return await service.get_current_breakdown(user.id)
 
 
 @router.get("/breakdown")

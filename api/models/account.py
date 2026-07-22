@@ -8,7 +8,6 @@ from . import Base
 
 if TYPE_CHECKING:
     from .user import User
-    from .transaction import Transaction
 
 class Account(Base):
     __tablename__ = "accounts"
@@ -44,6 +43,3 @@ class Account(Base):
 
     # Relationships
     user: Mapped["User"] = relationship(back_populates="accounts")
-    transactions: Mapped[list["Transaction"]] = relationship(
-        back_populates="account", cascade="all, delete-orphan"
-    )

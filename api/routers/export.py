@@ -1,7 +1,8 @@
-from typing import Annotated
+from datetime import date
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, Query
+from fastapi.responses import JSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
@@ -20,11 +21,24 @@ def get_service(db: AsyncSession = Depends(get_db)) -> ExportService:
 async def export_all(
     user: Annotated[User, Depends(get_current_user)],
     service: Annotated[ExportService, Depends(get_service)],
+    format: Literal["json", "csv"] = Query("json"),
 ):
-    """Full JSON dump of the current user's data — accounts, categories,
-    transactions and net-worth snapshots — as a downloadable attachment."""
+    """Full dump of the current user's data — accounts, connections and
+    net-worth snapshots — as a downloadable attachment. `format=csv` returns
+    a zip of one CSV per entity instead of the single JSON document."""
+    stamp = date.today().isoformat()
+
+    if format == "csv":
+        content = await service.export_csv(user)
+        return Response(
+            content=content,
+            media_type="application/zip",
+            headers={
+                "Content-Disposition": f'attachment; filename="finka-export-{stamp}.zip"'
+            },
+        )
+
     data = await service.export_user(user)
-    stamp = data["meta"]["generated_at"][:10]
     return JSONResponse(
         content=data,
         headers={

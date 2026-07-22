@@ -5,25 +5,26 @@ time" endpoint. The history chart is therefore built from snapshots WE record �
 one row per day — that accumulate going forward. Day one is a single point; it
 becomes a real line over time.
 
-Sources are aggregated in `_collect_balances`: each connected provider
-(Trading212, Coinbase, Monzo) plus any active manual Account rows contributes a
-GBP figure. total_assets is their sum; the per-source split is stored in
-`breakdown`. A provider that isn't configured is skipped; one that errors is
-logged and contributes 0 rather than sinking the whole snapshot.
+Sources are aggregated in `_collect_balances`: each active user Connection
+(Monzo, Trading212, Coinbase, or a generic HTTP endpoint) plus any active manual
+Account rows contributes a GBP figure. total_assets is their sum; the per-source
+split is stored in `breakdown`. A connection that errors is logged and
+contributes 0 rather than sinking the whole snapshot.
 """
 
 import logging
-from datetime import date
+from datetime import date, datetime, timezone
 from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import flag_modified
 
-from integrations.coinbase import CoinbaseClient, CoinbaseError
-from integrations.monzo import MonzoClient, MonzoError
-from integrations.trading212 import Trading212Client, Trading212Error
+from integrations import registry
+from integrations.registry import ProviderError
 from models.account import Account
+from models.connection import Connection
 from models.net_worth_snapshot import NetWorthSnapshot
 
 logger = logging.getLogger(__name__)
@@ -34,29 +35,36 @@ class NetWorthService:
         self.db = db
 
     async def _collect_balances(self, user_id: UUID) -> dict[str, Decimal]:
-        """One GBP figure per connected source. Missing sources are omitted."""
+        """One GBP figure per active source. Failing sources are logged and skipped."""
         breakdown: dict[str, Decimal] = {}
 
-        # Trading212 — the only source that must be present (Phase 0 baseline).
-        try:
-            cash = await Trading212Client().fetch_cash()
-            breakdown["trading212"] = Decimal(str(cash["total"]))
-        except (Trading212Error, KeyError) as e:
-            logger.warning("Trading212 balance unavailable: %s", e)
-
-        coinbase = CoinbaseClient()
-        if coinbase.configured:
+        # Connections: each is one instance of a registry provider. The registry
+        # maps provider + config -> a GBP figure, so we never name a provider here.
+        connections = await self.db.scalars(
+            select(Connection).where(
+                Connection.user_id == user_id, Connection.is_active.is_(True)
+            )
+        )
+        now = datetime.now(timezone.utc)
+        for conn in connections:
+            key = f"conn:{conn.label}"
+            conn.last_synced_at = now
             try:
-                breakdown["coinbase"] = await coinbase.total_gbp()
-            except CoinbaseError as e:
-                logger.warning("Coinbase balance unavailable: %s", e)
-
-        monzo = MonzoClient()
-        if monzo.configured:
-            try:
-                breakdown["monzo"] = await monzo.total_gbp()
-            except MonzoError as e:
-                logger.warning("Monzo balance unavailable: %s", e)
+                spec = registry.get(conn.provider)
+                value = await spec.fetch_gbp(conn.config or {})
+                breakdown[key] = breakdown.get(key, Decimal("0")) + value
+                conn.last_status = "ok"
+                conn.last_error = None
+                conn.last_value = value
+                # A provider may rotate credentials in-place (e.g. Monzo OAuth
+                # refresh tokens). Flag the JSON column so the new tokens persist.
+                flag_modified(conn, "config")
+            except ProviderError as e:
+                # An active source that fails contributes 0 rather than sinking the
+                # whole snapshot; the health fields let the UI surface WHY.
+                conn.last_status = "error"
+                conn.last_error = str(e)[:500]
+                logger.warning("Connection %r (%s) unavailable: %s", conn.label, conn.provider, e)
 
         # Manual accounts (Peoples Pension, Tembo, ...): balances the user keeps
         # up to date by hand. Grouped under the account name.
@@ -128,14 +136,14 @@ class NetWorthService:
     async def get_current_breakdown(self, user_id: UUID) -> dict:
         """Live per-source split for the dashboard.
 
-        External providers (Trading212/Coinbase/Monzo) come from the latest
-        snapshot — re-fetching them every request would hit rate limits. Manual
-        accounts are cheap DB reads, so we take them LIVE: a balance you edit
-        shows up immediately, without waiting for the next daily snapshot.
+        Connection sources (conn:*) come from the latest snapshot — re-fetching
+        every request would hit provider rate limits. Manual accounts are cheap
+        DB reads, so we take them LIVE: a balance you edit shows up immediately,
+        without waiting for the next daily snapshot.
         """
         snapshot = await self.get_latest(user_id)
-        # Keep only external-provider entries from the snapshot; drop its
-        # point-in-time account:* rows so the live ones below replace them.
+        # Keep only connection entries from the snapshot; drop its point-in-time
+        # account:* rows so the live ones below replace them.
         breakdown: dict[str, float] = {}
         snapshot_date = None
         if snapshot is not None and snapshot.breakdown:
@@ -145,6 +153,18 @@ class NetWorthService:
             snapshot_date = snapshot.snapshot_date.isoformat()
 
         long_term_keys: list[str] = []
+
+        # Connections marked long-term feed the spendable/long-term split. Their
+        # values live in the snapshot above, keyed conn:{label}.
+        connections = await self.db.scalars(
+            select(Connection).where(
+                Connection.user_id == user_id, Connection.is_active.is_(True)
+            )
+        )
+        for conn in connections:
+            if conn.is_long_term:
+                long_term_keys.append(f"conn:{conn.label}")
+
         accounts = await self.db.scalars(
             select(Account).where(Account.user_id == user_id, Account.is_active.is_(True))
         )

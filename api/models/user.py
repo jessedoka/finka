@@ -7,9 +7,8 @@ from . import Base
 
 if TYPE_CHECKING:
     from .account import Account
-    from .category import Category
-    from .transaction import Transaction
     from .net_worth_snapshot import NetWorthSnapshot
+    from .connection import Connection
 
 class User(Base):
     __tablename__ = "users"
@@ -30,12 +29,9 @@ class User(Base):
     accounts: Mapped[list["Account"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
-    categories: Mapped[list["Category"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan"
-    )
-    transactions: Mapped[list["Transaction"]] = relationship(
-        back_populates="user", cascade="all, delete-orphan"
-    )
     net_worth_snapshots: Mapped[list["NetWorthSnapshot"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    connections: Mapped[list["Connection"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )

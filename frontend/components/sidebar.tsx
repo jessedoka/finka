@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { HomeIcon, Package2Icon, PackageIcon, UsersIcon } from "lucide-react"
+import { HomeIcon, Package2Icon, PackageIcon, PlugIcon } from "lucide-react"
 import { ExportButton } from "@/components/export-button"
 
 const menu = [
@@ -10,6 +10,11 @@ const menu = [
         title: "Dashboard",
         icon: HomeIcon,
         href: "/dashboard",
+    },
+    {
+        title: "Connections",
+        icon: PlugIcon,
+        href: "/connections",
     },
     {
         title: "Manual Accounts",
