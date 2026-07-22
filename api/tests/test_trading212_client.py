@@ -1,6 +1,13 @@
-"""Tests for the mechanical T212 client: auth header, parsing, 429 backoff.
+"""Trading212 client: the rate-limit backoff loop.
 
-Uses httpx.MockTransport so no real network / no real key is needed.
+Kept deliberately narrow. The provider-agnostic guarantees — auth reaching the
+wire, errors normalising to ProviderError, Decimal in/out — are covered for
+EVERY provider in test_provider_contract.py; duplicating them per provider just
+anchors the suite to whichever integrations happen to exist today.
+
+What survives here is the one piece of genuinely non-trivial mechanical logic
+that no other provider shares: T212's strict per-endpoint rate limits mean this
+client retries with exponential backoff, and that loop is worth pinning down.
 """
 
 import httpx
@@ -10,28 +17,11 @@ from integrations.trading212 import Trading212Client, Trading212Error
 
 
 @pytest.mark.asyncio
-async def test_fetch_cash_sends_key_and_parses():
-    seen = {}
-
-    def handler(request: httpx.Request) -> httpx.Response:
-        seen["auth"] = request.headers.get("Authorization")
-        seen["url"] = str(request.url)
-        return httpx.Response(200, json={"free": 10.0, "invested": 90.0, "total": 100.0})
-
-    client = Trading212Client("my-secret-key", transport=httpx.MockTransport(handler))
-    cash = await client.fetch_cash()
-
-    assert cash["total"] == 100.0
-    # raw key, NOT "Bearer ..."
-    assert seen["auth"] == "my-secret-key"
-    assert seen["url"].endswith("/api/v0/equity/account/cash")
-
-
-@pytest.mark.asyncio
 async def test_retries_on_429_then_succeeds(monkeypatch):
-    # don't actually sleep during the backoff
+    # Don't actually sleep through the backoff.
     async def no_sleep(_):
         return None
+
     monkeypatch.setattr("integrations.trading212.asyncio.sleep", no_sleep)
 
     calls = {"n": 0}
@@ -50,10 +40,20 @@ async def test_retries_on_429_then_succeeds(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_bad_key_raises(monkeypatch):
-    def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(401)
+async def test_gives_up_after_max_retries(monkeypatch):
+    async def no_sleep(_):
+        return None
 
-    client = Trading212Client("wrong", transport=httpx.MockTransport(handler))
+    monkeypatch.setattr("integrations.trading212.asyncio.sleep", no_sleep)
+
+    calls = {"n": 0}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls["n"] += 1
+        return httpx.Response(429)
+
+    client = Trading212Client("k", max_retries=3, transport=httpx.MockTransport(handler))
     with pytest.raises(Trading212Error):
         await client.fetch_cash()
+
+    assert calls["n"] == 3

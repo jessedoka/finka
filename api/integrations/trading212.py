@@ -2,11 +2,11 @@
 
 This module's ONLY job is to talk HTTP to Trading212 and hand back the raw
 JSON dicts. It deliberately knows nothing about Finka's models, database, or
-users. Mapping T212's shape onto Account / NetWorthSnapshot is the service
-layer's job (services/trading212_service.py) — that's the part you write.
+users — aggregation lives in services/net_worth_service.py, via the provider
+registry. The API key is supplied by the caller from a Connection's config.
 
-NOTE ON ENDPOINTS: the T212 docs sit behind a login, so the paths below are my
-best knowledge of the v0 API. Verify them against your own account's docs
+NOTE ON ENDPOINTS: the T212 docs sit behind a login, so the paths below are a
+best effort at the v0 API. Verify them against your own account's docs
 (Settings -> API (Beta)); if a path 404s, that's the first thing to check.
 
 Auth: T212 expects the raw API key in the `Authorization` header — NOT
@@ -22,7 +22,6 @@ import logging
 
 import httpx
 
-from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ class Trading212Client:
         max_retries: int = 4,
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
-        self.api_key = api_key or settings.trading_212_key
+        self.api_key = api_key or ""
         self.base_url = base_url
         self.timeout = timeout
         self.max_retries = max_retries

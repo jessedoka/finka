@@ -14,8 +14,8 @@ VALUATION: balances come back in their own asset (BTC, ETH, GBP, ...). We value
 each in GBP via Coinbase's PUBLIC spot-price endpoint (no auth). Fiat balances
 already in GBP are taken at face value.
 
-Untested against a live key until COINBASE_API_KEY_NAME / _PRIVATE_KEY are set;
-`scripts/coinbase_smoke.py` is the quickest way to confirm it works.
+Credentials come from the user's Coinbase Connection, not config — use the
+"Test" action on the Connections page to confirm a key works.
 """
 
 import base64
@@ -28,7 +28,6 @@ import httpx
 import jwt
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
-from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -49,10 +48,9 @@ class CoinbaseClient:
         timeout: float = 15.0,
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
-        self.api_key_name = api_key_name if api_key_name is not None else settings.coinbase_api_key_name
-        # Env stores the PEM as one line with escaped newlines; restore them.
-        raw_key = api_private_key if api_private_key is not None else settings.coinbase_api_private_key
-        self.api_private_key = raw_key.replace("\\n", "\n")
+        self.api_key_name = api_key_name or ""
+        # A PEM pasted into a single line carries escaped newlines; restore them.
+        self.api_private_key = (api_private_key or "").replace("\\n", "\n")
         self.timeout = timeout
         self._transport = transport
 
