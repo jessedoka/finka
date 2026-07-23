@@ -44,6 +44,15 @@ export function ProjectionCard() {
                                     +{gbp.format(data.growth)}
                                 </span>{" "}
                                 growth
+                                {data.spent > 0 && (
+                                    <>
+                                        {" · "}
+                                        <span className="text-amber-600 dark:text-amber-400">
+                                            −{gbp.format(data.spent)}
+                                        </span>{" "}
+                                        goals
+                                    </>
+                                )}
                             </p>
                         )}
                     </div>
@@ -77,6 +86,38 @@ export function ProjectionCard() {
                     </div>
                 )}
                 {points.length >= 2 && <PortfolioChart data={points} positive />}
+
+                {data && data.events.length > 0 && (
+                    <div className="space-y-2 border-t pt-4">
+                        <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                            Planned goal outflows
+                        </p>
+                        {data.events.map((ev, i) => (
+                            <div
+                                key={`${ev.name}-${ev.date}-${i}`}
+                                className="flex items-center justify-between gap-3 text-sm"
+                            >
+                                <span className="min-w-0 truncate">
+                                    {ev.name}
+                                    <span className="ml-2 text-xs text-muted-foreground">
+                                        {new Date(ev.date).toLocaleDateString("en-GB", {
+                                            month: "short",
+                                            year: "numeric",
+                                        })}
+                                    </span>
+                                </span>
+                                <span className="flex items-center gap-2">
+                                    <span className="font-mono text-amber-600 tabular-nums dark:text-amber-400">
+                                        −{gbp.format(ev.drop)}
+                                    </span>
+                                    <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                                        → {gbp.format(ev.value_after)}
+                                    </span>
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </CardContent>
         </Card>
     )
