@@ -117,7 +117,9 @@ export function PortfolioChart({
                 {/* invisible hit targets */}
                 {points.map((p, i) => (
                     <rect
-                        key={p.date}
+                        // Index-scoped: a goal-outflow date appears twice (peak + trough
+                        // point) to render the dip as a vertical step, so date alone collides.
+                        key={`${p.date}-${i}`}
                         x={p.x - stepX / 2}
                         y={0}
                         width={stepX || W}
