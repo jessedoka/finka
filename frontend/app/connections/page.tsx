@@ -23,6 +23,17 @@ import {
 const selectClass =
     "h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring"
 
+function percentToFraction(raw: string): string {
+    const n = Number(raw)
+    return Number.isFinite(n) ? String(n / 100) : raw
+}
+
+function fractionToPercent(stored: unknown): string {
+    if (stored === undefined || stored === null || stored === "") return ""
+    const n = Number(stored)
+    return Number.isFinite(n) ? String(n * 100) : String(stored)
+}
+
 // The `headers` field on the generic HTTP provider is a JSON object, entered as
 // text; everything else is a plain string. Returns the config object to POST.
 function buildConfig(fields: ProviderField[], values: Record<string, string>): Record<string, unknown> {
@@ -31,9 +42,65 @@ function buildConfig(fields: ProviderField[], values: Record<string, string>): R
         const raw = (values[f.name] ?? "").trim()
         if (!raw) continue
         if (f.name === "headers") config[f.name] = JSON.parse(raw) // may throw -> caught by caller
+        else if (f.name === "growth_rate") config[f.name] = percentToFraction(raw)
         else config[f.name] = raw
     }
     return config
+}
+
+function ProjectionFieldsEditor({
+    connection,
+    fields,
+    saving,
+    onSave,
+}: {
+    connection: Connection
+    fields: ProviderField[]
+    saving: boolean
+    onSave: (config: Record<string, unknown>) => void
+}) {
+    const [values, setValues] = useState<Record<string, string>>(() =>
+        Object.fromEntries(
+            fields.map((f) => [
+                f.name,
+                f.name === "growth_rate"
+                    ? fractionToPercent(connection.config[f.name])
+                    : String(connection.config[f.name] ?? ""),
+            ]),
+        ),
+    )
+
+    const save = () => {
+        const { _secrets, ...rest } = connection.config
+        const config: Record<string, unknown> = { ...rest }
+        for (const f of fields) {
+            const raw = values[f.name]?.trim()
+            if (raw) config[f.name] = f.name === "growth_rate" ? percentToFraction(raw) : raw
+            else delete config[f.name]
+        }
+        onSave(config)
+    }
+
+    return (
+        <div className="mt-2 flex flex-wrap items-end gap-2 border-t pt-2">
+            {fields.map((f) => (
+                <label key={f.name} className="flex flex-col gap-1 text-[11px] text-muted-foreground">
+                    {f.label}
+                    <Input
+                        className="h-8 w-32 rounded-md border border-input px-2 text-xs"
+                        type="number"
+                        step="any"
+                        value={values[f.name] ?? ""}
+                        placeholder={f.placeholder}
+                        onChange={(e) => setValues({ ...values, [f.name]: e.target.value })}
+                    />
+                </label>
+            ))}
+            <Button size="xs" variant="secondary" disabled={saving} onClick={save}>
+                {saving ? "Saving…" : "Save"}
+            </Button>
+        </div>
+    )
 }
 
 export default function ConnectionsPage() {
@@ -108,7 +175,7 @@ export default function ConnectionsPage() {
         if (!provider) return null
         try {
             setFormError(null)
-            return buildConfig(provider.fields, values)
+            return buildConfig([...provider.fields, ...provider.projection_fields], values)
         } catch {
             setFormError("Headers must be valid JSON, e.g. {\"Authorization\": \"Bearer …\"}")
             return null
@@ -205,6 +272,40 @@ export default function ConnectionsPage() {
                                 ))}
                             </div>
 
+                            {provider.projection_fields.length > 0 && (
+                                <div className="space-y-2 border-t pt-3">
+                                    <p className="text-xs font-medium text-muted-foreground">
+                                        Projection (optional) — how this source should compound in the
+                                        projection chart. Left blank, it's held flat at today's value.
+                                    </p>
+                                    <div className="flex flex-wrap gap-3">
+                                        {provider.projection_fields.map((f) => (
+                                            <label
+                                                key={f.name}
+                                                className="flex flex-col gap-1 text-xs text-muted-foreground"
+                                            >
+                                                <span>{f.label}</span>
+                                                <Input
+                                                    className="w-64 rounded-lg border border-input px-3"
+                                                    type="number"
+                                                    step="any"
+                                                    value={values[f.name] ?? ""}
+                                                    placeholder={f.placeholder}
+                                                    onChange={(e) =>
+                                                        setValues({ ...values, [f.name]: e.target.value })
+                                                    }
+                                                />
+                                                {f.help && (
+                                                    <span className="max-w-64 text-[11px] leading-tight text-muted-foreground/70">
+                                                        {f.help}
+                                                    </span>
+                                                )}
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
                             <label className="flex items-center gap-2 text-xs text-muted-foreground">
                                 <input
                                     type="checkbox"
@@ -271,7 +372,7 @@ export default function ConnectionsPage() {
                         </p>
                     )}
                     {connections?.map((c) => (
-                        <div key={c.id} className="flex items-center justify-between gap-4 px-6 py-3">
+                        <div key={c.id} className="flex flex-wrap items-center justify-between gap-4 px-6 py-3">
                             <div className="min-w-0">
                                 <div className="font-medium">{c.label}</div>
                                 <div className="text-xs text-muted-foreground">
@@ -346,6 +447,24 @@ export default function ConnectionsPage() {
                                     <Trash2Icon />
                                 </Button>
                             </div>
+                            {(() => {
+                                const spec = providers?.find((p) => p.key === c.provider)
+                                if (!spec || spec.projection_fields.length === 0) return null
+                                return (
+                                    <div className="basis-full">
+                                        <ProjectionFieldsEditor
+                                            connection={c}
+                                            fields={spec.projection_fields}
+                                            saving={
+                                                updateMut.isPending && updateMut.variables?.id === c.id
+                                            }
+                                            onSave={(config) =>
+                                                updateMut.mutate({ id: c.id, patch: { config } })
+                                            }
+                                        />
+                                    </div>
+                                )
+                            })()}
                         </div>
                     ))}
                 </CardContent>
