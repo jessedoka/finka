@@ -45,7 +45,12 @@ export type Breakdown = {
     date: string | null
     net_worth: number | null
     spendable: number
+    long_term: number
     long_term_keys: string[]
+    // Committed: the earmarked SLICE of a source tied to a ring-fenced goal.
+    committed: number
+    committed_keys: string[]
+    committed_by_key: Record<string, number>
     breakdown: Record<string, number>
 }
 
@@ -237,6 +242,113 @@ export async function testConnection(
     })
     if (!res.ok) throw new Error("Failed to test connection")
     return res.json()
+}
+
+// --- Goals ("earmarked funds / sinking funds") ------------------------------
+
+export type Allocation = {
+    id: number
+    source_key: string
+    allocated_amount: number | null // null = the source's whole live value
+    counted: number // what actually counts now (capped at live value)
+}
+
+// Shared by the list endpoint and the detail endpoint.
+export type GoalProgress = {
+    id: number
+    name: string
+    currency: string
+    ring_fenced: boolean
+    target: number
+    funded: number
+    remaining: number
+    pct: number | null
+    reached: boolean
+    target_date: string | null
+    days_remaining: number | null
+    months_remaining: number | null
+    required_monthly: number | null
+    overdue: boolean
+    allocations: Allocation[]
+}
+
+// GET /{id} adds the funding curve and the inferred run-rate.
+export type GoalDetail = GoalProgress & {
+    series: { date: string; funded: number }[]
+    actual_monthly: number | null
+    on_track: boolean | null // null = not enough history to say
+}
+
+export type GoalInput = {
+    name: string
+    target_amount: string
+    target_date?: string | null
+    currency?: string
+    ring_fenced?: boolean
+    notes?: string | null
+}
+
+const GOALS_URL = "http://localhost:8000/api/goals/"
+
+async function jsonOrThrow(res: Response, fallback: string) {
+    if (!res.ok) throw new Error((await res.json().catch(() => null))?.detail ?? fallback)
+    return res.json()
+}
+
+export async function fetchGoals(): Promise<GoalProgress[]> {
+    return jsonOrThrow(await fetch(GOALS_URL), "Failed to fetch goals")
+}
+
+export async function fetchGoal(id: number): Promise<GoalDetail> {
+    return jsonOrThrow(await fetch(`${GOALS_URL}${id}`), "Failed to fetch goal")
+}
+
+export async function createGoal(input: GoalInput): Promise<GoalDetail> {
+    return jsonOrThrow(
+        await fetch(GOALS_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(input),
+        }),
+        "Failed to create goal",
+    )
+}
+
+export async function updateGoal(id: number, patch: Partial<GoalInput>): Promise<GoalDetail> {
+    return jsonOrThrow(
+        await fetch(`${GOALS_URL}${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(patch),
+        }),
+        "Failed to update goal",
+    )
+}
+
+export async function deleteGoal(id: number): Promise<void> {
+    const res = await fetch(`${GOALS_URL}${id}`, { method: "DELETE" })
+    if (!res.ok) throw new Error("Failed to delete goal")
+}
+
+export async function addAllocation(
+    goalId: number,
+    input: { source_key: string; allocated_amount?: string | null },
+): Promise<GoalDetail> {
+    return jsonOrThrow(
+        await fetch(`${GOALS_URL}${goalId}/allocations`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(input),
+        }),
+        "Failed to earmark source",
+    )
+}
+
+export async function removeAllocation(goalId: number, allocationId: number): Promise<GoalDetail> {
+    return jsonOrThrow(
+        await fetch(`${GOALS_URL}${goalId}/allocations/${allocationId}`, { method: "DELETE" }),
+        "Failed to remove earmark",
+    )
 }
 
 // Fetches the full data export and triggers a browser download of the file.
