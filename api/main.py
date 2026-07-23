@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import settings
-from routers import accounts, net_worth, trading212, export, connections
+from routers import accounts, net_worth, trading212, export, connections, goals
 from services import scheduler
 
 
@@ -35,6 +35,7 @@ app.include_router(net_worth.router)
 app.include_router(trading212.router)
 app.include_router(export.router)
 app.include_router(connections.router)
+app.include_router(goals.router)
 
 @app.get('/health')
 async def health_check():
