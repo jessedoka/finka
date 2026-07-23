@@ -9,6 +9,7 @@ if TYPE_CHECKING:
     from .account import Account
     from .net_worth_snapshot import NetWorthSnapshot
     from .connection import Connection
+    from .goal import Goal
 
 class User(Base):
     __tablename__ = "users"
@@ -33,5 +34,8 @@ class User(Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     connections: Mapped[list["Connection"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    goals: Mapped[list["Goal"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )
