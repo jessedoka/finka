@@ -96,3 +96,33 @@ def test_run_rate_insufficient_history_is_unknown():
     svc = GoalService(db=None)  # type: ignore[arg-type]
     one_point = [{"date": date.today().isoformat(), "funded": 5000.0}]
     assert svc._run_rate(one_point, {"required_monthly": 100.0, "reached": False}) == (None, None)
+
+
+def test_run_rate_ignores_leading_unfunded_period():
+    # Years of £0 snapshots, then saving ramps in the last month. The rate must
+    # reflect that recent pace, not be diluted to a trickle by the dead run.
+    svc = GoalService(db=None)  # type: ignore[arg-type]
+    d = date.today()
+    series = [
+        {"date": (d - timedelta(days=400)).isoformat(), "funded": 0.0},
+        {"date": (d - timedelta(days=200)).isoformat(), "funded": 0.0},
+        {"date": (d - timedelta(days=31)).isoformat(), "funded": 0.0},  # anchor: last £0
+        {"date": (d - timedelta(days=30)).isoformat(), "funded": 1000.0},
+        {"date": d.isoformat(), "funded": 3000.0},
+    ]
+    actual, _ = svc._run_rate(series, {"required_monthly": 555.0, "reached": False})
+    # £3000 over ~1 month (31 days), NOT £3000 over 400 days (~£228/mo would be wrong).
+    assert actual is not None and actual > 2500
+
+    # Anchored from the first snapshot instead, the same data reads far lower.
+    diluted = (3000 - 0) / (400 / 30.44)
+    assert diluted < 250
+
+
+def test_run_rate_none_when_never_funded():
+    svc = GoalService(db=None)  # type: ignore[arg-type]
+    series = [
+        {"date": (date.today() - timedelta(days=60)).isoformat(), "funded": 0.0},
+        {"date": date.today().isoformat(), "funded": 0.0},
+    ]
+    assert svc._run_rate(series, {"required_monthly": 100.0, "reached": False}) == (None, None)

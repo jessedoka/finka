@@ -233,7 +233,13 @@ class GoalService:
         return points
 
     def _run_rate(self, series: list[dict], progress: dict) -> tuple[float | None, bool | None]:
-        """Actual £/month accrued (first→last snapshot) and whether it beats the required rate.
+        """Actual £/month accrued since saving began, and whether it beats the required rate.
+
+        The rate is measured from when funding actually STARTED, not from the first
+        snapshot ever: a goal's earmarked sources may only have been funded recently,
+        after months/years of £0 snapshots. Averaging over that dead run badly
+        understates the real pace, so we anchor at the snapshot just before the first
+        funded one (daily snapshots make that "just before" a real, adjacent point).
 
         Returns (actual_monthly, on_track). Both None when there isn't enough
         history to say honestly, or when the goal has no deadline. `on_track` is
@@ -242,7 +248,11 @@ class GoalService:
         """
         if len(series) < 2:
             return None, None
-        first, last = series[0], series[-1]
+        first_funded = next((i for i, p in enumerate(series) if p["funded"] > 0), None)
+        if first_funded is None:
+            return None, None  # nothing funded yet — no rate to report
+        anchor = max(first_funded - 1, 0)
+        first, last = series[anchor], series[-1]
         elapsed_days = (date.fromisoformat(last["date"]) - date.fromisoformat(first["date"])).days
         elapsed_months = elapsed_days / _DAYS_PER_MONTH
         if elapsed_months < _MIN_MONTHS_FOR_RATE:
