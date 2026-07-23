@@ -19,15 +19,49 @@ from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from sqlalchemy.orm.attributes import flag_modified
 
 from integrations import registry
 from integrations.registry import ProviderError
 from models.account import Account
 from models.connection import Connection
+from models.goal import Goal
 from models.net_worth_snapshot import NetWorthSnapshot
 
 logger = logging.getLogger(__name__)
+
+
+def _committed_slices(
+    ring_fenced_goals: list["Goal"],
+    breakdown: dict[str, float],
+    long_term_keys: list[str],
+) -> dict[str, float]:
+    """Per-source committed amount from ring-fenced goals — the 'committed' bucket.
+
+    Only the earmarked slice is committed (partial allocations honour the same
+    cap as funding: min(allocated, live value)), the cumulative per source can
+    never exceed that source's live value, long-term sources are excluded (a
+    locked source is never 'committed'), and a source absent from the breakdown
+    contributes nothing. Kept pure and free-standing so it's unit-testable
+    without a DB — and the local `_counted` import breaks the goal_service cycle.
+    """
+    from services.goal_service import _counted
+
+    committed_by_key: dict[str, float] = {}
+    for goal in ring_fenced_goals:
+        for alloc in goal.allocations:
+            key = alloc.source_key
+            if key in long_term_keys or key not in breakdown:
+                continue
+            available = breakdown[key]
+            room = available - committed_by_key.get(key, 0.0)
+            if room <= 0:  # source already fully committed by another allocation/goal
+                continue
+            committed_by_key[key] = committed_by_key.get(key, 0.0) + min(
+                _counted(alloc, available), room
+            )
+    return committed_by_key
 
 
 class NetWorthService:
@@ -140,6 +174,14 @@ class NetWorthService:
         every request would hit provider rate limits. Manual accounts are cheap
         DB reads, so we take them LIVE: a balance you edit shows up immediately,
         without waiting for the next daily snapshot.
+
+        Net worth partitions into three mutually-exclusive buckets:
+          - long_term: sources flagged is_long_term (locked: pension, LISA, ...)
+          - committed: the earmarked SLICE of any source tied to a ring-fenced goal
+            (liquid but reserved — e.g. a proof-of-funds floor). Only the slice is
+            carved out; the rest of a partially-earmarked source stays spendable.
+          - spendable: everything else = net_worth - long_term - committed
+        Long-term wins over committed: a locked source is never counted committed.
         """
         snapshot = await self.get_latest(user_id)
         # Keep only connection entries from the snapshot; drop its point-in-time
@@ -174,13 +216,26 @@ class NetWorthService:
             if acct.is_long_term:
                 long_term_keys.append(key)
 
+        # Third bucket: slices earmarked by ring-fenced goals.
+        goals = await self.db.scalars(
+            select(Goal)
+            .where(Goal.user_id == user_id, Goal.ring_fenced.is_(True))
+            .options(selectinload(Goal.allocations))
+        )
+        committed_by_key = _committed_slices(list(goals), breakdown, long_term_keys)
+        committed = sum(committed_by_key.values())
         net_worth = sum(breakdown.values())
-        spendable = sum(v for k, v in breakdown.items() if k not in long_term_keys)
+        long_term = sum(v for k, v in breakdown.items() if k in long_term_keys)
+        spendable = net_worth - long_term - committed
 
         return {
             "date": snapshot_date,
             "net_worth": net_worth,
             "spendable": spendable,
+            "long_term": long_term,
             "long_term_keys": long_term_keys,
+            "committed": committed,
+            "committed_keys": list(committed_by_key.keys()),
+            "committed_by_key": committed_by_key,
             "breakdown": breakdown,
         }

@@ -24,13 +24,20 @@ export function NetWorthBreakdown() {
     })
 
     const longTerm = new Set(data?.long_term_keys ?? [])
+    const committedByKey = data?.committed_by_key ?? {}
     const spendableView = tab === "Spendable"
 
+    // In the Spendable view a source shows only its spendable portion: long-term
+    // sources drop out entirely, and a partially ring-fenced source shows its
+    // value MINUS the committed slice (so the rows sum to the Spendable headline).
     const entries = Object.entries(data?.breakdown ?? {})
-        .filter(([k, v]) => v !== 0 && (!spendableView || !longTerm.has(k)))
+        .map(([k, v]) => [k, spendableView ? v - (committedByKey[k] ?? 0) : v] as [string, number])
+        .filter(([k, v]) => v > 0.005 && (!spendableView || !longTerm.has(k)))
         .sort((a, b) => b[1] - a[1])
     const total = entries.reduce((sum, [, v]) => sum + v, 0) || 1
     const hasLongTerm = (data?.long_term_keys ?? []).length > 0
+    const hasCommitted = (data?.committed ?? 0) > 0.005
+    const hasTabs = hasLongTerm || hasCommitted
 
     return (
         <Card className="h-full">
@@ -47,7 +54,7 @@ export function NetWorthBreakdown() {
                         </span>
                     )}
                 </div>
-                {hasLongTerm && (
+                {hasTabs && (
                     <div className="inline-flex w-fit rounded-lg bg-muted p-0.5">
                         {TABS.map((t) => (
                             <button
@@ -73,7 +80,7 @@ export function NetWorthBreakdown() {
                 {data && entries.length === 0 && (
                     <p className="text-sm text-muted-foreground">
                         {spendableView
-                            ? "Nothing spendable — all assets are marked long-term."
+                            ? "Nothing spendable — everything is long-term or committed to a goal."
                             : "No snapshot yet — connect a source or add an account, then record a snapshot."}
                     </p>
                 )}
@@ -87,6 +94,32 @@ export function NetWorthBreakdown() {
                             <p className="text-xs text-muted-foreground">
                                 {spendableView ? "spendable now" : "total net worth"}
                             </p>
+                            {!spendableView && hasTabs && (
+                                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                                    <span className="text-muted-foreground">
+                                        Spendable{" "}
+                                        <span className="font-mono font-medium text-foreground tabular-nums">
+                                            {gbp.format(data.spendable)}
+                                        </span>
+                                    </span>
+                                    {hasCommitted && (
+                                        <span className="text-muted-foreground">
+                                            Committed{" "}
+                                            <span className="font-mono font-medium text-amber-600 tabular-nums dark:text-amber-400">
+                                                {gbp.format(data.committed)}
+                                            </span>
+                                        </span>
+                                    )}
+                                    {hasLongTerm && (
+                                        <span className="text-muted-foreground">
+                                            Long-term{" "}
+                                            <span className="font-mono font-medium text-violet-600 tabular-nums dark:text-violet-400">
+                                                {gbp.format(data.long_term)}
+                                            </span>
+                                        </span>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <div className="space-y-3">
@@ -105,6 +138,13 @@ export function NetWorthBreakdown() {
                                                 {!spendableView && longTerm.has(key) && (
                                                     <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground uppercase">
                                                         Long-term
+                                                    </span>
+                                                )}
+                                                {!spendableView && !longTerm.has(key) && committedByKey[key] > 0.005 && (
+                                                    <span className="shrink-0 rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 uppercase dark:text-amber-400">
+                                                        {committedByKey[key] >= (data.breakdown[key] ?? 0) - 0.005
+                                                            ? "Committed"
+                                                            : `${gbp.format(committedByKey[key])} committed`}
                                                     </span>
                                                 )}
                                                 <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">

@@ -208,8 +208,15 @@ _SPECS: dict[str, ProviderSpec] = {
                           help="Managed automatically."),
         ],
         projection_fields=[
-            ProviderField("monthly_contribution", "Monthly contribution", required=False),
-            ProviderField("growth_rate", "Annual growth rate (e.g. 0.02)", required=False),
+            ProviderField(
+                "monthly_contribution", "Monthly contribution", required=False,
+                help="Recurring amount you add each month (e.g. savings pot top-ups). Held flat in the projection if unset.",
+            ),
+            ProviderField(
+                "growth_rate", "Interest rate (%)", required=False,
+                help="Interest this pot earns per year, as a percentage — e.g. 3.25 for a 3.25% AER.",
+                placeholder="3.25",
+            ),
         ],
     ),
     "trading212": ProviderSpec(
@@ -226,6 +233,17 @@ _SPECS: dict[str, ProviderSpec] = {
                 help="Set truthy if the key is for a demo account.",
             ),
         ],
+        projection_fields=[
+            ProviderField(
+                "monthly_contribution", "Monthly contribution", required=False,
+                help="Recurring amount you invest each month. Held flat in the projection if unset.",
+            ),
+            ProviderField(
+                "growth_rate", "Expected annual return (%)", required=False,
+                help="Expected yearly return on this portfolio, as a percentage — e.g. 7 for 7%.",
+                placeholder="7",
+            ),
+        ],
     ),
     "coinbase": ProviderSpec(
         key="coinbase",
@@ -234,6 +252,17 @@ _SPECS: dict[str, ProviderSpec] = {
         fields=[
             ProviderField("api_key_name", "API key name / id", help="CDP key id from portal.cdp.coinbase.com."),
             ProviderField("api_private_key", "Private key", secret=True, help="The CDP private key (PEM or base64)."),
+        ],
+        projection_fields=[
+            ProviderField(
+                "monthly_contribution", "Monthly contribution", required=False,
+                help="Recurring amount you buy/deposit each month. Held flat in the projection if unset.",
+            ),
+            ProviderField(
+                "growth_rate", "Expected annual return (%)", required=False,
+                help="Expected yearly return, as a percentage — e.g. 10 for 10%. Crypto is volatile — treat as a rough guess.",
+                placeholder="10",
+            ),
         ],
     ),
     "http": ProviderSpec(
@@ -259,6 +288,17 @@ _SPECS: dict[str, ProviderSpec] = {
                 "multiplier", "Multiplier", required=False,
                 help="Scales the value — e.g. 0.01 to convert pennies to pounds. Also use to pre-convert currency (no FX built in).",
                 placeholder="1",
+            ),
+        ],
+        projection_fields=[
+            ProviderField(
+                "monthly_contribution", "Monthly contribution", required=False,
+                help="Recurring amount added each month. Held flat in the projection if unset.",
+            ),
+            ProviderField(
+                "growth_rate", "Annual growth rate (%)", required=False,
+                help="Expected yearly growth, as a percentage — e.g. 5 for 5%.",
+                placeholder="5",
             ),
         ],
     ),
