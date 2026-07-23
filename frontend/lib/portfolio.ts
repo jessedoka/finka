@@ -131,6 +131,18 @@ export type ProjectionPoint = {
     date: string
     value: number
     breakdown: Record<string, number>
+    // Set on the trough point of a goal outflow — the goal's name.
+    event?: string
+}
+
+// A dated goal modelled as a planned outflow in the projection.
+export type ProjectionEvent = {
+    date: string
+    name: string
+    amount: number
+    value_before: number
+    value_after: number
+    drop: number
 }
 
 export type Projection = {
@@ -138,6 +150,8 @@ export type Projection = {
     series: ProjectionPoint[]
     contributed: number
     growth: number
+    spent: number
+    events: ProjectionEvent[]
 }
 
 export async function fetchProjection(years: number): Promise<Projection> {
