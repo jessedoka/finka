@@ -19,6 +19,16 @@ services:
       - COINBASE_API_PRIVATE_KEY=${COINBASE_API_PRIVATE_KEY:-}
     volumes:
       - ./api:/app
+      # Mask host-only dirs with empty anonymous volumes. The container never
+      # reads them (its interpreter is /opt/venv), but leaving them visible means
+      # virtiofs shuttles them across and --reload registers a file watch per
+      # subdirectory — api/.venv alone is 168MB of files to watch for nothing.
+      - /app/.venv
+      - /app/.pytest_cache
+      # NB: do NOT mask /app/.cache — scripts/backfill reads its reconstructed
+      # price cache from there (_t212_fetch.py hardcodes /app/.cache/backfill/).
+    # Two containers on an 8GB laptop: keep them from ballooning the Docker VM.
+    mem_limit: 512m
     depends_on:
       db:
         condition: service_healthy
@@ -34,6 +44,16 @@ services:
       - POSTGRES_DB=finka_dev
     volumes:
       - pgdata:/var/lib/postgresql/data
+    # Postgres defaults (128MB shared_buffers, 100 connections) are sized for a
+    # server, not a single-user dev box. One app with a small pool needs far less.
+    command: >
+      postgres
+      -c shared_buffers=32MB
+      -c max_connections=20
+      -c work_mem=2MB
+      -c maintenance_work_mem=32MB
+      -c effective_cache_size=128MB
+    mem_limit: 256m
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U finka -d finka_dev"]
       interval: 5s

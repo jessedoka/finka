@@ -4,8 +4,7 @@ __pycache__/
 pgdata/
 .mypy_cache
 .ruff_cache/
-plan-v1.md
-plan-v2.md
+plan-v*.md
 plan-self-hosted.md
 
 .DS_Store
@@ -27,3 +26,6 @@ api/scripts/backfill_probe.py
 *.pdf
 The People's Pension*.csv
 Statement-*.csv
+*budget*.csv
+trip_*.csv
+.claude/
