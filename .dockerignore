@@ -1,3 +1,12 @@
-*.pyc
-__pycache__
-DS_Store
+*
+!api/
+
+# Local-only artefacts inside api/ that must not reach the image either.
+api/.venv/
+api/.cache/
+api/.pytest_cache/
+api/.mypy_cache/
+api/.ruff_cache/
+**/__pycache__/
+**/*.pyc
+.DS_Store
