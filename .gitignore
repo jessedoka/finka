@@ -16,16 +16,6 @@ api/uv.lock
 frontend/AGENTS.md
 week.md
 
-# Personal backfill workspace: reconstructed price cache + one-off probe scripts.
-# NB: keep this specific — api/scripts also holds shipped tooling (seed.py,
-# seed_connections.py, monzo_auth.py) that must stay tracked.
 api/.cache/
 api/scripts/backfill/
-api/scripts/backfill_probe.py
-# Personal financial statements (never commit)
-*.pdf
-The People's Pension*.csv
-Statement-*.csv
-*budget*.csv
-trip_*.csv
 .claude/

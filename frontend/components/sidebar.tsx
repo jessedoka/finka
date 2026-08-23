@@ -4,6 +4,8 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { HomeIcon, Package2Icon, PackageIcon, PlugIcon, TargetIcon } from "lucide-react"
 import { ExportButton } from "@/components/export-button"
+import { ThemeToggle, Theme } from "@/components/theme-toggle"
+import { useTheme } from "next-themes"
 
 const menu = [
     {
@@ -31,6 +33,7 @@ const menu = [
 
 export default function Sidebar() {
     const pathname = usePathname();
+    const { theme, setTheme } = useTheme();
 
     return (
         <div className="flex h-full max-h-screen flex-col gap-2">
@@ -51,8 +54,9 @@ export default function Sidebar() {
                     ))}
                 </nav>
             </div>
-            <div className="border-t p-4">
+            <div className="border-t p-4 flex items-center gap-2">
                 <ExportButton />
+                <ThemeToggle theme={theme} onSelect={setTheme} />
             </div>
         </div>
     )
