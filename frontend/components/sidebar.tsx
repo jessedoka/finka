@@ -1,10 +1,12 @@
 "use client"
 
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { HomeIcon, Package2Icon, PackageIcon, PlugIcon, TargetIcon } from "lucide-react"
 import { ExportButton } from "@/components/export-button"
 import { ThemeToggle, Theme } from "@/components/theme-toggle"
+import { Button } from "@/components/ui/button"
 import { useTheme } from "next-themes"
 
 const menu = [
@@ -34,6 +36,11 @@ const menu = [
 export default function Sidebar() {
     const pathname = usePathname();
     const { theme, setTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     return (
         <div className="flex h-full max-h-screen flex-col gap-2">
@@ -56,7 +63,11 @@ export default function Sidebar() {
             </div>
             <div className="border-t p-4 flex items-center gap-2">
                 <ExportButton />
-                <ThemeToggle theme={theme} onSelect={setTheme} />
+                {mounted ? (
+                    <ThemeToggle theme={theme as Theme} onSelect={setTheme} />
+                ) : (
+                    <Button variant="outline" size="icon" aria-label="Toggle theme" disabled />
+                )}
             </div>
         </div>
     )
