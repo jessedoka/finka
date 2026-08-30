@@ -37,8 +37,6 @@ class Connection(Base):
     is_long_term: Mapped[bool] = mapped_column(
         Boolean, default=False, server_default="false"
     )
-    # Sync health, written on each snapshot. Lets the UI show WHY an active source
-    # isn't contributing (e.g. an expired token) instead of silently dropping it.
     last_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_status: Mapped[str | None] = mapped_column(String(10))  # "ok" | "error"
     last_error: Mapped[str | None] = mapped_column(String(500))

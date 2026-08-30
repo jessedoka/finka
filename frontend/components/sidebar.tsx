@@ -44,11 +44,16 @@ export default function Sidebar() {
 
     return (
         <div className="flex h-full max-h-screen flex-col gap-2">
-            <div className="flex h-15 items-center border-b px-6">
+            <div className="flex h-15 items-center border-b px-6 justify-between">
                 <Link href="/dashboard" className="flex items-center gap-2 font-semibold" prefetch={false}>
                     <Package2Icon className="h-6 w-6" />
                     <span className="">Finka</span>
                 </Link>
+                {mounted ? (
+                    <ThemeToggle theme={theme as Theme} onSelect={setTheme} />
+                ) : (
+                    <Button variant="outline" size="icon" aria-label="Toggle theme" disabled />
+                )}
             </div>
             <div className="flex-1 overflow-auto py-2">
                 <nav className="grid items-start px-4 text-sm font-medium">
@@ -63,11 +68,6 @@ export default function Sidebar() {
             </div>
             <div className="border-t p-4 flex items-center gap-2">
                 <ExportButton />
-                {mounted ? (
-                    <ThemeToggle theme={theme as Theme} onSelect={setTheme} />
-                ) : (
-                    <Button variant="outline" size="icon" aria-label="Toggle theme" disabled />
-                )}
             </div>
         </div>
     )

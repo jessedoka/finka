@@ -24,8 +24,13 @@ function seriesForRange(series: SnapshotPoint[], days: number) {
     const points = series
         .filter((p): p is SnapshotPoint & { net_worth: number } => p.net_worth !== null)
         .map((p) => ({ date: p.date, value: p.net_worth }))
-    if (days === Infinity) return points
-    return points.slice(-days)
+    if (days === Infinity || points.length === 0) return points
+    // Filter by actual calendar distance from the latest snapshot, not by point
+    // count — the series can have gaps or duplicate-day entries, so slicing by
+    // index made "7D" mean "last 7 points" rather than "last 7 days".
+    const cutoff = new Date(points[points.length - 1].date)
+    cutoff.setDate(cutoff.getDate() - days)
+    return points.filter((p) => new Date(p.date) >= cutoff)
 }
 
 export function PortfolioOverview() {
