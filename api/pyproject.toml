@@ -12,7 +12,7 @@ dependencies = [
     "pydantic-settings==2.7.1",
     "alembic==1.14.1",
     "httpx==0.28.1",
-    "python-jose[cryptography]==3.3.0",
+    "cryptography>=43.0.0",
     "pyjwt>=2.13.0",
 ]
 

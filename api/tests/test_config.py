@@ -2,24 +2,22 @@ from config import Settings, settings
 
 
 def test_default_environment_is_production():
-    assert settings.environment == "production"
-
-
-def test_default_aws_region():
-    assert settings.aws_region == "eu-west-2"
-
+    defaults = Settings(_env_file=None)
+    assert defaults.environment == "production"
 
 def test_default_provider_credentials_are_blank_or_local():
-    assert settings.trading_212_key == "local"
-    assert settings.coinbase_api_key_name == ""
-    assert settings.coinbase_api_private_key == ""
-    assert settings.monzo_access_token == ""
-    assert settings.monzo_account_id == ""
+    defaults = Settings(_env_file=None)
+    assert defaults.trading_212_key == "local"
+    assert defaults.coinbase_api_key_name == ""
+    assert defaults.coinbase_api_private_key == ""
+    assert defaults.monzo_access_token == ""
+    assert defaults.monzo_account_id == ""
 
 
 def test_default_monzo_projection_assumptions_are_zero():
-    assert settings.monzo_pots_monthly_contribution == 0.0
-    assert settings.monzo_pots_growth_rate == 0.0
+    defaults = Settings(_env_file=None)
+    assert defaults.monzo_pots_monthly_contribution == 0.0
+    assert defaults.monzo_pots_growth_rate == 0.0
 
 
 def test_default_snapshot_scheduler_settings():

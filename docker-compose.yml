@@ -5,10 +5,7 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql+asyncpg://finka:finka@db:5432/finka_dev
-      - COGNITO_USER_POOL_ID=local
-      - COGNITO_APP_CLIENT_ID=local
       - ENVIRONMENT=development
-      # Substituted from the root .env at `docker compose up` time.
       - TRADING_212_KEY=${TRADING_212_KEY:-}
       - MONZO_ACCESS_TOKEN=${MONZO_ACCESS_TOKEN:-}
       - MONZO_ACCOUNT_ID=${MONZO_ACCOUNT_ID:-}

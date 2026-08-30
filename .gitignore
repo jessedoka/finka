@@ -19,3 +19,4 @@ week.md
 api/.cache/
 api/scripts/backfill/
 .claude/
+api/.pytest_cache/*
