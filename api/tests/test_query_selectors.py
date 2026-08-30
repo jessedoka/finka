@@ -1,6 +1,3 @@
-"""Query selectors build the expected SQLAlchemy select statements — the
-WHERE/ORDER BY clauses they attach, not the results of running them."""
-
 import uuid
 
 from query_selectors.account_selector import AccountSelector

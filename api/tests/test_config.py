@@ -1,5 +1,3 @@
-"""Settings default values (no .env file present in this environment)."""
-
 from config import Settings, settings
 
 

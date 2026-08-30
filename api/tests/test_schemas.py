@@ -1,5 +1,3 @@
-"""Pydantic schema defaults and validation for accounts, connections, and goals."""
-
 from decimal import Decimal
 
 import pytest
