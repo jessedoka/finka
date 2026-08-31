@@ -1,6 +1,6 @@
 __pycache__/
 .env
-*.pyc 
+*.pyc
 pgdata/
 .mypy_cache
 .ruff_cache/
@@ -12,11 +12,13 @@ ARCHITECTURE.md
 CLAUDE.md
 SETUP.md
 .vscode/settings.json
-api/uv.lock
 frontend/AGENTS.md
 week.md
 
-api/.cache/
-api/scripts/backfill/
 .claude/
-api/.pytest_cache/*
+
+.venv/
+*.egg-info/
+core/.cache/
+core/scripts/backfill/
+core/.pytest_cache/*

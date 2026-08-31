@@ -1,26 +1,9 @@
-"""Provider registry — the plugin seam for "bring your own source".
-
-A *provider* is a kind of data source (Monzo, Trading212, Coinbase, or a
-generic pollable HTTP endpoint). A user's `Connection` row picks a provider by
-key and supplies its `config` (credentials + settings). This registry maps a
-provider key + config onto a single GBP figure, so the service layer never
-names a provider — it just loops over the user's connections.
-
-Adding a named provider = registering one more `ProviderSpec` here (reusing the
-mechanical client in this package). Everything else — the API, the frontend
-form, the net-worth aggregation — is driven off `fields` and needs no change.
-
-Each spec's `fields` describes the config schema: it drives both the dynamic
-frontend form and connect-time validation. `secret` fields are write-only —
-their values are never returned on reads.
-"""
-
 import logging
-from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Awaitable, Callable
+from typing import Any 
 
-import httpx
+from integrations.contract import ProviderSpec, ProviderField, ProviderError
+from http_connector import http_gbp
 
 from integrations.coinbase import CoinbaseClient, CoinbaseError
 from integrations.monzo import MonzoClient, MonzoError
@@ -28,64 +11,7 @@ from integrations.trading212 import LIVE_BASE_URL, DEMO_BASE_URL, Trading212Clie
 
 logger = logging.getLogger(__name__)
 
-
-class ProviderError(RuntimeError):
-    """Raised when a provider can't produce a balance from its config."""
-
-
-@dataclass(frozen=True)
-class ProviderField:
-    name: str
-    label: str
-    secret: bool = False
-    required: bool = True
-    help: str = ""
-    placeholder: str = ""
-
-
-@dataclass(frozen=True)
-class ProviderSpec:
-    key: str
-    display_name: str
-    fields: list[ProviderField]
-    # The raw adapter. Call `fetch_gbp()` instead — it enforces the contract.
-    fetch: Callable[[dict[str, Any]], Awaitable[Any]]
-    # Optional projection knobs a connection may set in its config; listed so the
-    # projection service and the UI know which extra keys are meaningful.
-    projection_fields: list[ProviderField] = field(default_factory=list)
-
-    async def fetch_gbp(self, config: dict[str, Any]) -> Decimal:
-        """Fetch this source's value as a Decimal, normalising ALL failures.
-
-        The contract every caller relies on: this raises `ProviderError` and
-        nothing else. Aggregation (net_worth_service) catches only ProviderError
-        so one broken source contributes 0 instead of sinking the whole
-        snapshot — a provider leaking a raw httpx/parse error would defeat that.
-        Enforced here, centrally, so a new provider can't forget it.
-        """
-        try:
-            value = await self.fetch(config or {})
-        except ProviderError:
-            raise
-        except Exception as e:  # network, auth, parsing, provider-native errors
-            raise ProviderError(f"{self.display_name}: {e}") from e
-        try:
-            return Decimal(str(value))
-        except Exception as e:
-            raise ProviderError(f"{self.display_name} returned a non-numeric value: {value!r}") from e
-
-    def field_names(self) -> set[str]:
-        return {f.name for f in self.fields} | {f.name for f in self.projection_fields}
-
-    def secret_names(self) -> set[str]:
-        return {f.name for f in self.fields if f.secret}
-
-    def missing_required(self, config: dict[str, Any]) -> list[str]:
-        return [f.name for f in self.fields if f.required and not config.get(f.name)]
-
-
 # --- named providers: thin adapters over the existing mechanical clients ------
-
 
 async def _monzo_gbp(config: dict[str, Any]) -> Decimal:
     client = MonzoClient(
@@ -130,58 +56,6 @@ async def _coinbase_gbp(config: dict[str, Any]) -> Decimal:
         return await client.total_gbp()
     except CoinbaseError as e:
         raise ProviderError(str(e)) from e
-
-
-# --- generic HTTP connector: any pollable endpoint that returns a number ------
-
-
-def _extract(payload: Any, path: str) -> Any:
-    """Walk a dotted/indexed path into JSON (e.g. "data.accounts.0.balance")."""
-    current = payload
-    for part in path.split("."):
-        if part == "":
-            continue
-        if isinstance(current, list):
-            try:
-                current = current[int(part)]
-            except (ValueError, IndexError) as e:
-                raise ProviderError(f"value_path segment '{part}' not found in list") from e
-        elif isinstance(current, dict):
-            if part not in current:
-                raise ProviderError(f"value_path segment '{part}' not found in response")
-            current = current[part]
-        else:
-            raise ProviderError(f"value_path segment '{part}' can't index a {type(current).__name__}")
-    return current
-
-
-async def _http_gbp(config: dict[str, Any]) -> Decimal:
-    url = config.get("url")
-    if not url:
-        raise ProviderError("Generic HTTP connector needs a url")
-    method = (config.get("method") or "GET").upper()
-    headers = config.get("headers") or {}
-    value_path = config.get("value_path") or ""
-    try:
-        multiplier = Decimal(str(config.get("multiplier", 1)))
-    except Exception as e:
-        raise ProviderError(f"multiplier must be a number: {e}") from e
-
-    try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.request(method, url, headers=headers)
-        resp.raise_for_status()
-        payload = resp.json()
-    except httpx.HTTPError as e:
-        raise ProviderError(f"HTTP request failed: {e}") from e
-    except ValueError as e:
-        raise ProviderError(f"Response was not JSON: {e}") from e
-
-    raw = _extract(payload, value_path)
-    try:
-        return Decimal(str(raw)) * multiplier
-    except Exception as e:
-        raise ProviderError(f"Extracted value '{raw}' is not a number: {e}") from e
 
 
 _SPECS: dict[str, ProviderSpec] = {
@@ -268,7 +142,7 @@ _SPECS: dict[str, ProviderSpec] = {
     "http": ProviderSpec(
         key="http",
         display_name="Generic HTTP (JSON)",
-        fetch=_http_gbp,
+        fetch=http_gbp,
         fields=[
             ProviderField("url", "URL", help="An endpoint returning JSON with a balance."),
             ProviderField(
