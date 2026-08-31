@@ -2,10 +2,10 @@
 name = "finka-monzo"
 version = "0.1.0"
 requires-python = ">=3.11,<3.14"
-dependencies = ["httpx==0.28.1", "core"]
+dependencies = ["httpx==0.28.1"]
 
-[tool.uv.sources]
-core = { workspace = true }
+[project.entry-points."finka.providers"]
+monzo = "monzo:PROVIDER"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -16,7 +16,7 @@ from services.auth import get_current_user
 
 # Integration-test harness: the real FastAPI app + service + ORM stack, but on an
 # in-memory SQLite DB with a stubbed current-user, so create->earmark->split flows
-# run end to end without Postgres, dev-data pollution, or Cognito. StaticPool keeps
+# run end to end without Postgres, dev-data pollution. StaticPool keeps
 # the one in-memory connection alive so every session sees the same schema + rows.
 
 

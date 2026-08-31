@@ -1,26 +1,3 @@
-"""One-time Monzo OAuth setup — turns a confidential client into a permanent,
-self-refreshing connection. After this, the daily snapshot auto-refreshes the
-access token; you never paste a token again.
-
-Prereq: register a CONFIDENTIAL OAuth client at developers.monzo.com with the
-redirect URL below, giving you a client_id + client_secret.
-
-Two steps (run in the api container):
-
-  1) Start — stores the client creds and prints the authorise URL:
-       docker compose exec -T api python -m scripts.monzo_auth \
-           --client-id oauth2client_… --client-secret mnzconf…
-     Open the printed URL, sign in, approve. Your browser lands on a
-     can't-connect page whose address bar holds ?code=…&state=… — copy it.
-
-  2) Finish — exchange the code for tokens:
-       docker compose exec -T api python -m scripts.monzo_auth \
-           --redirect-url "http://localhost:8000/monzo/callback?code=…&state=…"
-
-  3) Approve the app in your Monzo phone app (Settings), then verify:
-       docker compose exec -T api python -m scripts.monzo_auth --test
-"""
-
 import argparse
 import asyncio
 import secrets
@@ -32,7 +9,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm.attributes import flag_modified
 
 from config import settings
-from integrations.monzo import AUTH_URL, MonzoClient, MonzoError, exchange_token
+from monzo import AUTH_URL, MonzoClient, MonzoError, exchange_token
 from models.connection import Connection
 
 REDIRECT_URI = "http://localhost:8000/monzo/callback"

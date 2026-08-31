@@ -11,7 +11,7 @@ import time
 import httpx
 import pytest
 
-from integrations.monzo import MonzoClient
+from monzo import MonzoClient
 
 
 def _handler(state):

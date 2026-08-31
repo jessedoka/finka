@@ -1,24 +1,12 @@
-"""Read-only Trading212 passthrough (MECHANICAL / plumbing only).
-
-Exposes the user's LIVE T212 numbers to the frontend so the "current amount"
-half of the dashboard renders as soon as they've added a Trading212 connection.
-It does NOT touch the net-worth tables — that persistence + history logic lives
-in the net-worth service. This is just the detailed portfolio view.
-
-The T212 key comes from the user's active `trading212` Connection (added via the
-Connections page), NOT a global env var — so it works for any user, not just the
-instance owner.
-"""
-
 from decimal import Decimal
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from trading212 import DEMO_BASE_URL, LIVE_BASE_URL, Trading212Client, Trading212Error
 
 from database import get_db
-from integrations.trading212 import DEMO_BASE_URL, LIVE_BASE_URL, Trading212Client, Trading212Error
 from models.connection import Connection
 from models.user import User
 from services.auth import get_current_user
