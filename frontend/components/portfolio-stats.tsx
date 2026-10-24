@@ -1,6 +1,7 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
+import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { fetchT212Summary, gbp, type Position } from "@/lib/portfolio"
 
@@ -37,6 +38,16 @@ export function PortfolioStats() {
             <CardContent className="space-y-4">
                 {isLoading && <p className="text-muted-foreground">Loading…</p>}
                 {isError && <p className="text-destructive">Couldn't reach Trading212.</p>}
+
+                {data === null && (
+                    <p className="text-sm text-muted-foreground">
+                        No Trading212 connection yet.{" "}
+                        <Link href="/connections" className="underline underline-offset-4">
+                            Add one on the Connections page
+                        </Link>{" "}
+                        to see your holdings here.
+                    </p>
+                )}
 
                 {data && positions.length === 0 && (
                     <p className="text-sm text-muted-foreground">No open positions.</p>

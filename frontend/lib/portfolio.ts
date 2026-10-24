@@ -28,9 +28,12 @@ export type SnapshotPoint = {
     total_assets: number | null
 }
 
-export async function fetchT212Summary(): Promise<Summary> {
+// Resolves to null when no Trading212 connection exists (the API answers 503), so the
+// UI can show an empty state instead of an error. Real failures still throw.
+export async function fetchT212Summary(): Promise<Summary | null> {
     // /summary is unauthenticated in Phase 0 (see routers/trading212.py), so no token needed yet.
     const res = await fetch("http://localhost:8000/api/integrations/trading212/summary")
+    if (res.status === 503) return null
     if (!res.ok) throw new Error("Failed to fetch Trading212 summary")
     return res.json()
 }
