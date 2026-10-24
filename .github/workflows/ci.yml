@@ -1,8 +1,19 @@
 name: CI
 on: [push]
 jobs:
-  hello:
+  core:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: ls
+      - uses: astral-sh/setup-uv@v5
+
+      - name: install deps
+        run: uv sync --all-groups
+        working-directory: core
+
+      - run: uv run ruff check
+        working-directory: core
+
+      - name: run tests
+        run: uv run pytest -q
+        working-directory: core
