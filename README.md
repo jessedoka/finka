@@ -126,7 +126,7 @@ What Finka does not do yet, on purpose. See [docs/scope.md](docs/scope.md).
 ## Quick start
 
 ```bash
-git clone <your-fork-url> finka
+git clone https://github.com/jessedoka/finka.git
 cd finka
 cp .env.example .env      # the defaults are fine for local use
 ./start.sh
