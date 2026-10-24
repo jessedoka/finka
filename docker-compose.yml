@@ -15,21 +15,49 @@ services:
       - COINBASE_API_KEY_NAME=${COINBASE_API_KEY_NAME:-}
       - COINBASE_API_PRIVATE_KEY=${COINBASE_API_PRIVATE_KEY:-}
     volumes:
-      - ./api:/app
+      - ./core:/app
       # Mask host-only dirs with empty anonymous volumes. The container never
       # reads them (its interpreter is /opt/venv), but leaving them visible means
       # virtiofs shuttles them across and --reload registers a file watch per
-      # subdirectory — api/.venv alone is 168MB of files to watch for nothing.
+      # subdirectory — core/.venv alone is 168MB of files to watch for nothing.
       - /app/.venv
       - /app/.pytest_cache
       # NB: do NOT mask /app/.cache — scripts/backfill reads its reconstructed
       # price cache from there (_t212_fetch.py hardcodes /app/.cache/backfill/).
+      #
+      # NOTE: trading212/monzo/coinbase provider code is NOT bind-mounted — it's
+      # baked into the image's venv at build time (uv sync --package core).
+      # Changing integrations/**/src/** needs `docker compose build api` to show
+      # up; --reload only picks up changes under ./core.
     # Two containers on an 8GB laptop: keep them from ballooning the Docker VM.
     mem_limit: 512m
     depends_on:
       db:
         condition: service_healthy
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # Fetches in lib/portfolio.ts run client-side (in the browser), so this
+      # has to be a host-reachable URL, NOT the compose service name (`api`) —
+      # the browser can't resolve Docker's internal network.
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      # The image bakes NODE_ENV=production for `npm start`; override it here
+      # since compose runs `npm run dev` instead.
+      - NODE_ENV=development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    # Turbopack's dev-mode cold compile is memory-hungry — 512m (fine for the
+    # Python api process) OOM-kills it mid-compile on the first route hit.
+    mem_limit: 2g
+    depends_on:
+      - api
+    command: npm run dev
 
   db:
     image: postgres:16

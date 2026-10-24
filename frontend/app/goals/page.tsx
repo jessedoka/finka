@@ -400,7 +400,7 @@ export default function GoalsPage() {
                                     className="w-56 rounded-lg border border-input px-3"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    placeholder="Asia + Australia 2027"
+                                    placeholder="Trip 2027"
                                 />
                             </label>
                             <label className="flex flex-col gap-1 text-xs text-muted-foreground">
@@ -441,7 +441,7 @@ export default function GoalsPage() {
                                 onChange={(e) => setRingFenced(e.target.checked)}
                             />
                             Ring-fenced — carve this money out of the Spendable view (e.g. a
-                            proof-of-funds floor you mustn&apos;t spend)
+                            minimum-balance floor you mustn&apos;t spend)
                         </label>
                         <div className="flex items-center gap-3">
                             <Button type="submit" disabled={createMut.isPending}>

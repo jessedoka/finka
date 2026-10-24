@@ -178,7 +178,7 @@ class NetWorthService:
         Net worth partitions into three mutually-exclusive buckets:
           - long_term: sources flagged is_long_term (locked: pension, LISA, ...)
           - committed: the earmarked SLICE of any source tied to a ring-fenced goal
-            (liquid but reserved — e.g. a proof-of-funds floor). Only the slice is
+            (liquid but reserved — e.g. a minimum-balance floor). Only the slice is
             carved out; the rest of a partially-earmarked source stays spendable.
           - spendable: everything else = net_worth - long_term - committed
         Long-term wins over committed: a locked source is never counted committed.

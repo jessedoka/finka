@@ -46,7 +46,7 @@ async def test_ring_fenced_goal_does_not_dip(client, session, user):
     due = date.today().replace(day=1) + timedelta(days=400)
     await client.post(
         GOALS,
-        json={"name": "Proof of funds", "target_amount": 5200, "target_date": due.isoformat(), "ring_fenced": True},
+        json={"name": "Minimum balance", "target_amount": 5200, "target_date": due.isoformat(), "ring_fenced": True},
     )
 
     proj = (await client.get(f"{PROJECTION}?years=5")).json()

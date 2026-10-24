@@ -39,8 +39,8 @@ async def _create_goal(client, **body):
 
 @pytest.mark.asyncio
 async def test_create_and_list_goal(client):
-    goal = await _create_goal(client, name="Asia 2027", target_amount=22000)
-    assert goal["name"] == "Asia 2027"
+    goal = await _create_goal(client, name="Trip 2027", target_amount=22000)
+    assert goal["name"] == "Trip 2027"
     assert goal["target"] == 22000.0
     assert goal["funded"] == 0.0
     assert goal["remaining"] == 22000.0
@@ -87,7 +87,7 @@ async def test_ring_fenced_goal_carves_committed_out_of_spendable(client, sessio
     # £10k liquid across two accounts; ring-fence a £5,200 slice of Savings.
     await _seed_account(session, user, "Savings", 8000)
     await _seed_account(session, user, "Current", 2000)
-    goal = await _create_goal(client, name="WHV proof of funds", target_amount=5200, ring_fenced=True)
+    goal = await _create_goal(client, name="Minimum balance", target_amount=5200, ring_fenced=True)
     await client.post(
         f"{GOALS}{goal['id']}/allocations",
         json={"source_key": "account:Savings", "allocated_amount": 5200},

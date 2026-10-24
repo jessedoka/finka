@@ -1,12 +1,21 @@
 *
-!api/
+!pyproject.toml
+!uv.lock
+!core/
+!integrations/
+!frontend/
 
-# Local-only artefacts inside api/ that must not reach the image either.
-api/.venv/
-api/.cache/
-api/.pytest_cache/
-api/.mypy_cache/
-api/.ruff_cache/
+# Local-only artefacts that must not reach either image.
+core/.venv/
+core/.cache/
+core/.pytest_cache/
+core/.mypy_cache/
+core/.ruff_cache/
+integrations/**/build/
+**/*.egg-info/
+.venv/
+frontend/node_modules/
+frontend/.next/
 **/__pycache__/
 **/*.pyc
 .DS_Store

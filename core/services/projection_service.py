@@ -14,7 +14,6 @@ The per-source monthly recurrence is:
 
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal
 from uuid import UUID
 
 from sqlalchemy import select
@@ -223,7 +222,7 @@ class ProjectionService:
         """Dated goals become planned outflows in the projection.
 
         Ring-fenced goals are excluded: ring-fencing means "reserved, do not spend"
-        (e.g. a proof-of-funds floor), so it should NOT dip the projection. Only
+        (e.g. a minimum-balance floor), so it should NOT dip the projection. Only
         goals with a future date inside the horizon are spends; the amount is the
         goal's target (its planned cost), independent of how much is funded today.
         """

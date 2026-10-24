@@ -21,13 +21,94 @@ number up to date by hand.
 
 ---
 
+## Why I built it
+
+I was saving for a big goal with a deadline and kept checking my progress across several apps.
+Finka started as a way to see that as one number instead of adding up several apps with a calculator.
+Everything in it traces back to that:
+
+- **Net worth graph.** One value for where I stand this month.
+- **By source.** Which assets contribute most. Trading212 gets its own holdings panel
+  so I can see which stocks are doing well.
+- **Projection.** Seeing how far I've come shows where it could go. It uses growth
+  rates and monthly contributions. Manual accounts take those two numbers directly;
+  for connected accounts you enter them and Finka projects from today's balance.
+- **Goals and spendable assets.** The projection looked too optimistic, especially
+  with a stretch of time without income. Goals ring-fence money, so the spendable figure is
+  honest.
+
+---
+
+## Key decisions
+
+The full reasoning is in [ADR 0001](docs/adr/0001-provider-contract.md). In short:
+
+1. **Local-first.** Finka was first designed for AWS (Cognito, RDS). I dropped that:
+   hosting cost money, and bank credentials in the cloud are a risk. It now runs on
+   your machine with Postgres in Docker.
+2. **Providers are separate packages.** Core never names a bank. A source is a
+   database row (provider + config), and each provider lives in its own package under
+   [`integrations/`](integrations/), found through entry points.
+3. **One failure-safe contract.** Every provider is called through
+   `ProviderSpec.fetch_gbp`, which raises only `ProviderError`. One broken source
+   cannot break a snapshot.
+
+---
+
+## How it works
+
+```mermaid
+flowchart LR
+    S[Daily scheduler] --> N[net_worth_service]
+    N -->|for each active Connection| F["ProviderSpec.fetch_gbp(config)"]
+    F --> P1[Monzo]
+    F --> P2[Coinbase]
+    F --> P3[Trading212]
+    F --> P4[Generic HTTP]
+    F -->|"any failure becomes ProviderError"| N
+    N --> DB[("Snapshot + connection health")]
+```
+
+- Each source you connect is a **Connection** row. The scheduler records one GBP
+  figure per source, which the history chart and by-source breakdown read.
+- `fetch_gbp` returns one value in pounds. That is what makes the figures summable.
+  There is no FX: a provider converts to pounds itself, and the generic connector has
+  a `multiplier` field for that.
+- Everything runs against your own Postgres. Credentials and balances stay on your
+  machine.
+
+### When a source fails
+
+1. The provider call raises, for example a timeout or a 401.
+2. `fetch_gbp` rewraps it as `ProviderError`.
+3. `net_worth_service` catches it, adds £0 for that source, and sets
+   `last_status="error"` and `last_error` on the connection.
+4. The snapshot is still saved, so **that day's total is understated**. The
+   Connections page shows which source failed and why.
+
+---
+
+## Deferred
+
+What Finka does not do yet, on purpose. See [docs/scope.md](docs/scope.md).
+
+- **Real auth.** It is single-user by design; Cognito was removed.
+- **Secrets at rest.** Provider credentials are stored as-is in the database.
+- **Partial snapshots.** A failed source counts as £0 with no marker on the snapshot,
+  and there is no fallback to the last known value.
+- **Retry and backoff.** Only the Trading212 client retries on `429`.
+- **FX conversion.** Only the `multiplier` workaround.
+- **Third-party providers.** Providers are bundled in this repo. A documented way to
+  install one from outside is future work.
+
+---
+
 ## Prerequisites
 
 | Tool | Version | Notes |
 |------|---------|-------|
-| Docker + Docker Compose | v2+ | Runs Postgres + the API |
-| Node.js | 20+ | Runs the frontend |
-| npm | 10+ | Comes with Node |
+| Docker + Docker Compose | v2+ | Runs Postgres, the API and the frontend. On macOS, Colima works (`start.sh` starts it) |
+| Node.js + npm | 20+ / 10+ | Only for [Manual setup](#manual-setup) |
 
 ---
 
@@ -37,11 +118,11 @@ number up to date by hand.
 git clone <your-fork-url> finka
 cd finka
 cp .env.example .env      # the defaults are fine for local use
-./dev.sh
+./start.sh
 ```
 
-`dev.sh` starts Postgres + the API in Docker, applies database migrations, and
-launches the frontend. When it's up:
+`start.sh` starts Postgres, the API and the frontend in Docker, applies database
+migrations and seeds the local user. When it's up:
 
 - **App:** http://localhost:3000
 - **API docs:** http://localhost:8000/docs
@@ -53,7 +134,18 @@ launches the frontend. When it's up:
 > a legacy convenience (see [Seeding sources from `.env`](#optional-seeding-sources-from-env))
 > and can be left blank.
 
-If you'd rather not use `dev.sh`, see [Manual setup](#manual-setup).
+### Try it with demo data
+
+```bash
+./start.sh --demo
+```
+
+Starts a separate copy with fictional accounts, 18 months of history and two goals, so
+you can see the dashboard fully populated. It uses its own database, so it never
+touches real data. Stop your normal stack first (both use the same ports). Remove it
+with `COMPOSE_PROJECT_NAME=finka-demo docker compose down -v`.
+
+If you'd rather not use `start.sh`, see [Manual setup](#manual-setup).
 
 ---
 
@@ -110,9 +202,11 @@ key, a token, etc.) instead of a raw URL. Each field has inline help pointing to
 where you generate the credential. Use these if your provider is in the list;
 otherwise the Generic HTTP connector above covers it.
 
-Adding a new named integration is a code change — register one `ProviderSpec` in
-[`api/integrations/registry.py`](api/integrations/registry.py) and it shows up
-everywhere automatically (form, validation, aggregation). PRs welcome.
+Adding a new named integration means a new package under [`integrations/`](integrations/)
+that exposes a manifest on the `finka.providers` entry point, plus an entry in
+[`core/pyproject.toml`](core/pyproject.toml). The registry then discovers it and it shows
+up everywhere automatically (form, validation, aggregation). See
+[ADR 0001](docs/adr/0001-provider-contract.md).
 
 ### Option 3 — Manual accounts
 
@@ -143,7 +237,7 @@ growth rate, annual charge) and the spendable/long-term flag.
 
 ## Manual setup
 
-If you're not using `dev.sh`:
+If you're not using `start.sh`:
 
 ```bash
 # 1. Database + API (Docker)
@@ -173,7 +267,7 @@ Requires Python 3.11–3.13 and [uv](https://docs.astral.sh/uv/). Start Postgres
 its own (`docker compose up db -d`), or point `DATABASE_URL` at any Postgres 16.
 
 ```bash
-cd api
+cd core
 uv sync                                  # install dependencies
 uv run alembic upgrade head              # migrations
 uv run uvicorn main:app --reload --port 8000
@@ -181,7 +275,7 @@ uv run uvicorn main:app --reload --port 8000
 
 ### Database management
 
-| Task | Command (from `api/`) |
+| Task | Command (from `core/`) |
 |------|-----------------------|
 | Apply pending migrations | `uv run alembic upgrade head` |
 | Roll back one migration | `uv run alembic downgrade -1` |
@@ -191,7 +285,7 @@ uv run uvicorn main:app --reload --port 8000
 ### Tests and linting
 
 ```bash
-cd api
+cd core
 uv run pytest
 uv run ruff check .
 
@@ -218,74 +312,22 @@ convenience; the UI is the normal way to add sources.
 
 ---
 
-## How it works
-
-- Each source you connect is a **Connection** row (provider + your config). A daily
-  in-container scheduler records a **net-worth snapshot** — one GBP figure per source
-  — which is what the history chart and by-source breakdown read from.
-- Provider logic lives behind a small **registry** ([`api/integrations/registry.py`](api/integrations/registry.py)),
-  so the rest of the app never hard-codes a provider. That's what makes the Generic
-  HTTP connector and any future integration drop-in.
-- Everything runs locally against your own Postgres. Your credentials and balances
-  never leave your machine.
-
----
-
-## Roadmap
-
-Ideas being considered, not commitments.
-
-### Fewer provider-specific integrations
-
-The named connectors carry more bespoke code than they need to. Looking at what each
-one actually requires beyond a plain HTTP GET:
-
-| Provider | Needs beyond a plain GET |
-|----------|--------------------------|
-| Trading212 (balance) | **Nothing** — the generic HTTP connector already covers it |
-| Monzo | One arithmetic step: subtracting two fields of the same response |
-| Coinbase | Genuinely irreducible — per-request JWT signing, pagination, per-asset valuation |
-
-So one of the three needs real code, one needs a small generic feature, and one needs
-none at all. The direction that suggests is **presets rather than plugins**: a named
-entry in the provider dropdown becomes a *pre-filled generic-HTTP config shipped as
-data*, so you still pick "Trading212" and fill in just your API key — but no bespoke
-client exists behind it. Code stays reserved for providers that genuinely can't be
-expressed declaratively (anything doing request signing).
-
-### Candidate generic capabilities
-
-Each of these would let a preset replace a hand-written client, and each is useful to
-*any* source rather than being one provider's special case:
-
-- **Auth styles** — bearer token, raw header, query parameter, rather than hand-typed
-  header JSON.
-- **Derived values** — sum or subtract across several value paths in one response.
-- **Retry/backoff** on `429`, which today only the Trading212 client does.
-
-### Open questions
-
-- What happens to the Trading212 positions/P&L panel? It needs more than one balance
-  number, so it either becomes a general "holdings" capability, or goes away.
-- Should signed-request providers stay in-tree, or move to optional plugin packages
-  installed separately?
-- How far should the declarative schema go before it becomes a DSL with its own
-  maintenance and documentation burden? Past a point, code is the simpler answer.
-
-The [`ProviderSpec`](api/integrations/registry.py) seam already makes either path
-possible without touching the rest of the app.
-
 ## Project layout
 
 ```
 finka/
-├── api/                     # FastAPI backend
-│   ├── integrations/        # Provider registry + per-provider clients
+├── core/                    # FastAPI backend
+│   ├── integrations/        # ProviderSpec contract + entry-point registry
 │   ├── models/ routers/ services/ schemas/
 │   ├── alembic/             # DB migrations
 │   ├── scripts/             # seed, reset, snapshot, seed_connections
 │   └── tests/
-├── frontend/                # Next.js app (Connections, Accounts, Dashboard)
+├── integrations/            # one package per provider
+│   ├── monzo/
+│   ├── coinbase/
+│   └── trading212/
+├── frontend/                # Next.js app
+├── docs/                    # ADRs and scope
 ├── docker-compose.yml
-└── dev.sh                   # one-command local start
+└── start.sh                 # one-command local start
 ```

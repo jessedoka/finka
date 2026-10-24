@@ -5,14 +5,19 @@ ENV UV_COMPILE_BYTECODE=1 \
     UV_PROJECT_ENVIRONMENT=/opt/venv
 
 WORKDIR /app
-COPY api/pyproject.toml api/uv.lock ./
-RUN uv sync --frozen --no-dev --no-install-project
+# Workspace layout: core/ plus the provider packages it bundles (integrations/*).
+# The providers are installed non-editable so the final image carries them in
+# /opt/venv without needing their source tree.
+COPY pyproject.toml uv.lock ./
+COPY core/pyproject.toml core/pyproject.toml
+COPY integrations/ integrations/
+RUN uv sync --frozen --no-dev --no-editable --package core
 
 FROM python:3.13-slim
 
 WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
-COPY api/ .
+COPY core/ .
 
 RUN useradd --create-home appuser
 USER appuser

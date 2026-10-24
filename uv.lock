@@ -195,6 +195,9 @@ dependencies = [
     { name = "asyncpg" },
     { name = "cryptography" },
     { name = "fastapi", extra = ["standard"] },
+    { name = "finka-coinbase" },
+    { name = "finka-monzo" },
+    { name = "finka-trading212" },
     { name = "httpx" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
@@ -218,6 +221,9 @@ requires-dist = [
     { name = "asyncpg", specifier = "==0.30.0" },
     { name = "cryptography", specifier = ">=43.0.0" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.115.0" },
+    { name = "finka-coinbase", editable = "integrations/coinbase" },
+    { name = "finka-monzo", editable = "integrations/monzo" },
+    { name = "finka-trading212", editable = "integrations/trading212" },
     { name = "httpx", specifier = "==0.28.1" },
     { name = "pydantic", specifier = "==2.10.4" },
     { name = "pydantic-settings", specifier = "==2.7.1" },
@@ -453,7 +459,6 @@ name = "finka-coinbase"
 version = "0.1.0"
 source = { editable = "integrations/coinbase" }
 dependencies = [
-    { name = "core" },
     { name = "cryptography" },
     { name = "httpx" },
     { name = "pyjwt" },
@@ -461,7 +466,6 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "core", virtual = "core" },
     { name = "cryptography", specifier = ">=43.0.0" },
     { name = "httpx", specifier = "==0.28.1" },
     { name = "pyjwt", specifier = ">=2.13.0" },
@@ -472,30 +476,22 @@ name = "finka-monzo"
 version = "0.1.0"
 source = { editable = "integrations/monzo" }
 dependencies = [
-    { name = "core" },
     { name = "httpx" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "core", virtual = "core" },
-    { name = "httpx", specifier = "==0.28.1" },
-]
+requires-dist = [{ name = "httpx", specifier = "==0.28.1" }]
 
 [[package]]
 name = "finka-trading212"
 version = "0.1.0"
 source = { editable = "integrations/trading212" }
 dependencies = [
-    { name = "core" },
     { name = "httpx" },
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "core", virtual = "core" },
-    { name = "httpx", specifier = "==0.28.1" },
-]
+requires-dist = [{ name = "httpx", specifier = "==0.28.1" }]
 
 [[package]]
 name = "greenlet"

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 class Goal(Base):
     """A savings goal / sinking fund — a named target you fund over time.
 
-    Agnostic by design: "Asia trip 2027", "house deposit", "emergency fund" are
+    Agnostic by design: "Trip 2027", "house deposit", "emergency fund" are
     all the same shape. A goal is *funded by earmarking real sources* (accounts
     or connections) via GoalAllocation, so progress and the funding-over-time
     curve fall out of the existing daily snapshots — no separately-tracked figure
@@ -21,7 +21,7 @@ class Goal(Base):
 
     `ring_fenced` introduces a third money state beyond spendable/long-term:
     money that is still liquid and still in net worth, but committed and must-not
-    -spend (e.g. a WHV proof-of-funds requirement). When set, the goal's earmarked
+    -spend (e.g. a minimum-balance requirement). When set, the goal's earmarked
     source keys are carved out of the "spendable" split.
     """
 

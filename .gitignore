@@ -22,3 +22,6 @@ week.md
 core/.cache/
 core/scripts/backfill/
 core/.pytest_cache/*
+
+# Local DB dumps (contain real provider credentials)
+*.sql

@@ -10,7 +10,7 @@ Two rules the whole file turns on:
   * Cap partial slices at the live value. An allocation of £5,200 from a pot that
     now holds only £4,000 counts £4,000 — a source dropping below its earmarked
     slice shows the goal as under-funded rather than pretending it's covered.
-    (Matters most for a ring-fenced proof-of-funds floor.)
+    (Matters most for a ring-fenced minimum-balance floor.)
   * A missing source key counts 0. Deleted / renamed / errored source => that
     allocation simply contributes nothing, never crashes the calc.
 """
