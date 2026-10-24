@@ -2,6 +2,13 @@
 
 ![CI](https://github.com/jessedoka/finka/actions/workflows/ci.yml/badge.svg)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/dashboard-dark.png">
+  <img alt="Finka dashboard with demo data: net worth history, by-source breakdown, projection and holdings" src="docs/screenshots/dashboard-light.png">
+</picture>
+
+*Screenshot uses the built-in demo data (`./start.sh --demo`); the Trading212 panel is mocked.*
+
 A self-hosted personal net-worth dashboard. You run it, you connect your own data
 sources, and it tracks your total net worth over time — with a spendable-vs-locked
 split and a savings projection.
