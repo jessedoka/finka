@@ -21,7 +21,7 @@ Going local raised the question this ADR answers: how does Finka get a balance f
 ## Considered Options
 
 1. **Hardcoded clients reading keys from `.env`** (v1, 18 Jul). Rejected: one user, one instance, and adding a bank meant code changes and a redeploy.
-2. **All providers in one registry inside core** (v2, 22 Jul). Rejected: Trading212, Monzo and Coinbase logic was fixed inside core. Providers should be a customisation, not core code.
+2. **All providers in one registry inside core** (v2, 22 Jul). Rejected: the logic for every provider was fixed inside core. Providers should be a customisation, not core code.
 3. **Host on AWS** (original plan). Rejected: it is not local-first. It costs money to run and puts bank credentials in the cloud.
 
 ## Decision Outcome
