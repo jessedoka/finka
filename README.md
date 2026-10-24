@@ -1,5 +1,7 @@
 # Finka
 
+![CI](https://github.com/jessedoka/finka/actions/workflows/ci.yml/badge.svg)
+
 A self-hosted personal net-worth dashboard. You run it, you connect your own data
 sources, and it tracks your total net worth over time — with a spendable-vs-locked
 split and a savings projection.
@@ -97,6 +99,8 @@ What Finka does not do yet, on purpose. See [docs/scope.md](docs/scope.md).
 - **Partial snapshots.** A failed source counts as £0 with no marker on the snapshot,
   and there is no fallback to the last known value.
 - **Retry and backoff.** Only the Trading212 client retries on `429`.
+- **Frontend lint.** CI builds the frontend but doesn't lint it yet: Biome reports
+  about 60 mostly formatting errors in existing code.
 - **FX conversion.** Only the `multiplier` workaround.
 - **Third-party providers.** Providers are bundled in this repo. A documented way to
   install one from outside is future work.
