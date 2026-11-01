@@ -23,6 +23,7 @@ from models.account import Account
 from models.connection import Connection
 from models.goal import Goal
 from services.net_worth_service import NetWorthService
+from integrations import registry
 
 
 @dataclass
@@ -188,6 +189,8 @@ class ProjectionService:
         # Projection knobs per connection, keyed conn:{label}. A connection may
         # set monthly_contribution / growth_rate in its config (e.g. Monzo pots
         # you keep topping up); anything unset defaults to held-flat.
+
+        projection_parts = {s.key: s.projection_part for s in registry.list_specs()}
         conn_cfg: dict[str, dict] = {}
         connections = await self.db.scalars(
             select(Connection).where(
@@ -195,7 +198,9 @@ class ProjectionService:
             )
         )
         for conn in connections:
-            conn_cfg[f"conn:{conn.label}"] = conn.config or {}
+            key = f"conn:{conn.label}"
+            part = projection_parts.get(conn.provider)
+            conn_cfg[f"{key}/{part}" if part else key] = conn.config or {}
 
         # Live sources: current values from the breakdown (snapshot connections +
         # live accounts). Skip the account:* entries — accounts are handled above.

@@ -76,3 +76,38 @@ async def test_no_refresh_creds_still_raises_on_401():
     with pytest.raises(Exception):  # MonzoError — no way to refresh
         await client.total_gbp()
     assert client.refreshed is False
+
+
+def _balance_and_pots(pots_response):
+    """Mock transport: a fixed /balance, and whatever /pots should answer."""
+    def handle(request: httpx.Request) -> httpx.Response:
+        if request.url.path == "/balance":
+            return httpx.Response(200, json={"balance": 120000, "total_balance": 650000})
+        return pots_response
+    return handle
+
+
+@pytest.mark.asyncio
+async def test_parts_split_pots_from_savings_and_skip_deleted():
+    pots = httpx.Response(200, json={"pots": [
+        {"balance": 30000, "type": "default", "deleted": False},
+        {"balance": 500000, "type": "instant_access", "deleted": False},
+        {"balance": 900, "type": "default", "deleted": True},
+    ]})
+    client = MonzoClient(
+        access_token="at", account_id="acc",
+        transport=httpx.MockTransport(_balance_and_pots(pots)),
+    )
+    assert await client.parts_gbp() == {
+        "Current account": 1200, "Pots": 300, "Savings": 5000,
+    }
+
+
+@pytest.mark.asyncio
+async def test_parts_fall_back_when_pots_is_forbidden():
+    """A /pots 403 must not turn the whole connection into £0."""
+    client = MonzoClient(
+        access_token="at", account_id="acc",
+        transport=httpx.MockTransport(_balance_and_pots(httpx.Response(403))),
+    )
+    assert await client.parts_gbp() == {"Current account": 1200, "Pots": 5300}

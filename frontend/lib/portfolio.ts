@@ -60,7 +60,9 @@ export type Breakdown = {
 export async function fetchBreakdown(): Promise<Breakdown> {
     const res = await fetch("http://localhost:8000/api/net-worth/breakdown")
     if (!res.ok) throw new Error("Failed to fetch net-worth breakdown")
-    return res.json()
+    let response = res.json()
+    console.log("!!!response:",  response)
+    return response
 }
 
 // Re-polls every connected source and records today's snapshot, returning the

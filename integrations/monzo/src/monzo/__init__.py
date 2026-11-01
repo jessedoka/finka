@@ -6,7 +6,7 @@ from .monzo import AUTH_URL, TOKEN_URL, MonzoClient, MonzoError, exchange_token
 __all__ = ["MonzoClient", "MonzoError", "exchange_token", "AUTH_URL", "TOKEN_URL", "PROVIDER"]
 
 
-async def _fetch_gbp(config: dict[str, Any]) -> Decimal:
+async def _fetch_gbp(config: dict[str, Any]) -> dict[str, Decimal]:
     client = MonzoClient(
         access_token=config.get("access_token"),
         account_id=config.get("account_id"),
@@ -15,7 +15,7 @@ async def _fetch_gbp(config: dict[str, Any]) -> Decimal:
         refresh_token=config.get("refresh_token"),
         expires_at=config.get("monzo_expires_at"),
     )
-    value = await client.total_gbp()
+    value = await client.parts_gbp()
     # If the OAuth token rotated mid-fetch, write the new tokens back into the
     # SAME config dict. net_worth_service flags the connection's config modified
     # so these persist — otherwise the rotated refresh token is lost and the
@@ -34,6 +34,7 @@ PROVIDER = {
     "key": "monzo",
     "display_name": "Monzo",
     "fetch": _fetch_gbp,
+    "projection_part": "Savings",
     "fields": [
         {"name": "account_id", "label": "Account ID", "help": "The Monzo account to read."},
         {

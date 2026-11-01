@@ -75,9 +75,7 @@ class NetWorthService:
         # Connections: each is one instance of a registry provider. The registry
         # maps provider + config -> a GBP figure, so we never name a provider here.
         connections = await self.db.scalars(
-            select(Connection).where(
-                Connection.user_id == user_id, Connection.is_active.is_(True)
-            )
+            select(Connection).where(Connection.user_id == user_id, Connection.is_active.is_(True) )
         )
         now = datetime.now(timezone.utc)
         for conn in connections:
@@ -85,12 +83,14 @@ class NetWorthService:
             conn.last_synced_at = now
             try:
                 spec = registry.get(conn.provider)
-                value = await spec.fetch_gbp(conn.config or {})
-                breakdown[key] = breakdown.get(key, Decimal("0")) + value
+                parts = await spec.fetch_parts(conn.config or {})
+                for part, value in parts.items():
+                    line = f"{key}/{part}" if part else key
+                    breakdown[line] = breakdown.get(line, Decimal("0")) + value
                 conn.last_status = "ok"
                 conn.last_error = None
-                conn.last_value = value
-                # A provider may rotate credentials in-place (e.g. Monzo OAuth
+                conn.last_value = sum(parts.values(), Decimal("0"))
+                # A provider may rotate credentials in-place (e.g. Monzo OAuth)
                 # refresh tokens). Flag the JSON column so the new tokens persist.
                 flag_modified(conn, "config")
             except ProviderError as e:
@@ -205,7 +205,9 @@ class NetWorthService:
         )
         for conn in connections:
             if conn.is_long_term:
-                long_term_keys.append(f"conn:{conn.label}")
+                base = f"conn:{conn.label}"
+                long_term_keys.append(base)
+                long_term_keys.extend(k for k in breakdown if k.startswith(f"{base}/"))
 
         accounts = await self.db.scalars(
             select(Account).where(Account.user_id == user_id, Account.is_active.is_(True))

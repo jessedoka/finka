@@ -9,10 +9,12 @@ def _build_spec(manifest: dict) -> ProviderSpec:
         fetch=manifest["fetch"],
         fields=[ProviderField(**f) for f in manifest["fields"]],
         projection_fields=[ProviderField(**f) for f in manifest.get("projection_fields", [])],
+        projection_part=manifest.get('projection_part', '')
     )
 
 def _discover_specs() -> dict[str, ProviderSpec]:
-    specs = {"http": ProviderSpec(
+    specs = {
+        "http": ProviderSpec(
             key="http",
             display_name="Generic HTTP (JSON)",
             fetch=http_gbp,

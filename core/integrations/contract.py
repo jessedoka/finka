@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any, Awaitable, Callable
+from collections.abc import Mapping
 
 class ProviderError(RuntimeError):
     """Raised when a provider can't produce a balance from its config."""
@@ -20,20 +21,16 @@ class ProviderSpec:
     key: str
     display_name: str
     fields: list[ProviderField]
-    # The raw adapter. Call `fetch_gbp()` instead — it enforces the contract.
     fetch: Callable[[dict[str, Any]], Awaitable[Any]]
-    # Optional projection knobs a connection may set in its config; listed so the
-    # projection service and the UI know which extra keys are meaningful.
     projection_fields: list[ProviderField] = field(default_factory=list)
 
-    async def fetch_gbp(self, config: dict[str, Any]) -> Decimal:
-        """Fetch this source's value as a Decimal, normalising ALL failures.
+    # Which part gets monthly_contribution / growth_rate. "" means the whole source.
+    projection_part: str = ""
 
-        The contract every caller relies on: this raises `ProviderError` and
-        nothing else. Aggregation (net_worth_service) catches only ProviderError
-        so one broken source contributes 0 instead of sinking the whole
-        snapshot — a provider leaking a raw httpx/parse error would defeat that.
-        Enforced here, centrally, so a new provider can't forget it.
+    async def fetch_parts(self, config: dict[str, Any]) -> dict[str, Decimal]:
+        """Fetch this source as named parts, normalising ALL failures.
+
+        A provider returning one number becomes a single part named "".
         """
         try:
             value = await self.fetch(config or {})
@@ -41,10 +38,16 @@ class ProviderSpec:
             raise
         except Exception as e:  # network, auth, parsing, provider-native errors
             raise ProviderError(f"{self.display_name}: {e}") from e
+        raw = value if isinstance(value, Mapping) else {"": value}
         try:
-            return Decimal(str(value))
+            return {part: Decimal(str(v)) for part, v in raw.items()}
         except Exception as e:
             raise ProviderError(f"{self.display_name} returned a non-numeric value: {value!r}") from e
+
+    async def fetch_gbp(self, config: dict[str, Any]) -> Decimal:
+        """This source's total. Raises `ProviderError` and nothing else."""
+        parts = await self.fetch_parts(config)
+        return sum(parts.values(), Decimal("0"))
 
     def field_names(self) -> set[str]:
         return {f.name for f in self.fields} | {f.name for f in self.projection_fields}

@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 BASE_URL = "https://api.monzo.com"
 TOKEN_URL = f"{BASE_URL}/oauth2/token"
 AUTH_URL = "https://auth.monzo.com/"
-
+SAVINGS_TYPES = {"flexible_savings", "fixed_savings", "instant_access"}
 
 class MonzoError(RuntimeError):
     """Raised when the Monzo API returns an unrecoverable error."""
@@ -131,6 +131,30 @@ class MonzoClient:
     async def fetch_balance(self) -> dict:
         """Balance for the configured account: {balance, total_balance, currency} in minor units."""
         return await self._get("/balance", params={"account_id": self.account_id})
+
+    async def parts_gbp(self) -> dict[str, Decimal]:
+        """Current account, pots and savings in GBP.
+
+        Falls back to one unsplit Pots line if /pots fails, so a permissions
+        problem can't turn the whole connection into £0.
+        """
+        bal = await self.fetch_balance()
+        current = Decimal(str(bal.get("balance", 0)))
+        total = Decimal(str(bal.get("total_balance", bal.get("balance", 0))))
+        try:
+            data = await self._get("/pots", params={"current_account_id": self.account_id})
+        except (MonzoError, httpx.HTTPError):
+            pots_minor = max(total - current, Decimal("0"))
+            return {"Current account": current / 100, "Pots": pots_minor / 100}
+
+        live = [p for p in data["pots"] if not p.get("deleted")]
+        savings = sum(p["balance"] for p in live if p.get("type") in SAVINGS_TYPES)
+        pots = sum(p["balance"] for p in live if p.get("type") not in SAVINGS_TYPES)
+        return {
+            "Current account": current / 100,
+            "Pots": Decimal(pots) / 100,
+            "Savings": Decimal(savings) / 100,
+        }
 
     async def total_gbp(self) -> Decimal:
         """Pots only, in GBP — excludes the spendable current account.
