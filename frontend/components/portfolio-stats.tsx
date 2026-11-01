@@ -7,12 +7,12 @@ import { fetchT212Summary, gbp, type Position } from "@/lib/portfolio"
 
 // A small rotating palette so each holding gets a stable-ish accent colour.
 const DOT = [
-    "bg-sky-500",
-    "bg-amber-500",
-    "bg-violet-500",
-    "bg-emerald-500",
-    "bg-rose-500",
-    "bg-cyan-500",
+    "bg-chart-1",
+    "bg-chart-2",
+    "bg-chart-3",
+    "bg-chart-4",
+    "bg-chart-5",
+    "bg-chart-6",
 ]
 
 function positionValue(p: Position) {
@@ -77,8 +77,8 @@ export function PortfolioStats() {
                                         <div
                                             className={`font-mono text-xs tabular-nums ${
                                                 up
-                                                    ? "text-emerald-600 dark:text-emerald-400"
-                                                    : "text-rose-600 dark:text-rose-400"
+                                                    ? "text-positive"
+                                                    : "text-negative"
                                             }`}
                                         >
                                             {up ? "▲" : "▼"} {gbp.format(Math.abs(p.ppl))}
@@ -109,8 +109,8 @@ export function PortfolioStats() {
                         <dd
                             className={`text-right font-mono tabular-nums ${
                                 data.cash.ppl >= 0
-                                    ? "text-emerald-600 dark:text-emerald-400"
-                                    : "text-rose-600 dark:text-rose-400"
+                                    ? "text-positive"
+                                    : "text-negative"
                             }`}
                         >
                             {data.cash.ppl >= 0 ? "+" : "−"}

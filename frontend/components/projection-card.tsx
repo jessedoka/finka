@@ -24,10 +24,10 @@ export function ProjectionCard() {
             <CardContent className="space-y-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="space-y-2">
-                        <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                        <p className="text-sm font-semibold text-muted-foreground">
                             Projected in {years} years
                         </p>
-                        <div className="font-mono text-4xl font-semibold tracking-tight tabular-nums md:text-5xl">
+                        <div className="font-mono text-4xl font-normal tabular-nums md:text-5xl">
                             {isLoading ? (
                                 <span className="text-muted-foreground">£—</span>
                             ) : (
@@ -36,18 +36,18 @@ export function ProjectionCard() {
                         </div>
                         {data && (
                             <p className="text-sm text-muted-foreground">
-                                <span className="text-emerald-600 dark:text-emerald-400">
+                                <span className="text-positive">
                                     +{gbp.format(data.contributed)}
                                 </span>{" "}
                                 contributed ·{" "}
-                                <span className="text-sky-600 dark:text-sky-400">
+                                <span className="text-primary">
                                     +{gbp.format(data.growth)}
                                 </span>{" "}
                                 growth
                                 {data.spent > 0 && (
                                     <>
                                         {" · "}
-                                        <span className="text-amber-600 dark:text-amber-400">
+                                        <span className="text-warning">
                                             −{gbp.format(data.spent)}
                                         </span>{" "}
                                         goals
@@ -57,16 +57,16 @@ export function ProjectionCard() {
                         )}
                     </div>
 
-                    <div className="inline-flex rounded-lg bg-muted p-0.5">
+                    <div className="inline-flex">
                         {HORIZONS.map((y) => (
                             <button
                                 key={y}
                                 type="button"
                                 onClick={() => setYears(y)}
-                                className={`rounded-md px-3 py-1.5 text-xs font-semibold tracking-wide transition-colors ${
+                                className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
                                     years === y
-                                        ? "bg-background text-foreground shadow-sm"
-                                        : "text-muted-foreground hover:text-foreground"
+                                        ? "bg-primary-wash text-primary"
+                                        : "text-foreground hover:bg-secondary"
                                 }`}
                             >
                                 {y}Y
@@ -85,11 +85,11 @@ export function ProjectionCard() {
                         Couldn't load projection.
                     </div>
                 )}
-                {points.length >= 2 && <PortfolioChart data={points} positive />}
+                {points.length >= 2 && <PortfolioChart data={points} />}
 
                 {data && data.events.length > 0 && (
                     <div className="space-y-2 border-t pt-4">
-                        <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                        <p className="text-sm font-semibold text-muted-foreground">
                             Planned goal outflows
                         </p>
                         {data.events.map((ev, i) => (
@@ -107,7 +107,7 @@ export function ProjectionCard() {
                                     </span>
                                 </span>
                                 <span className="flex items-center gap-2">
-                                    <span className="font-mono text-amber-600 tabular-nums dark:text-amber-400">
+                                    <span className="font-mono text-warning tabular-nums">
                                         −{gbp.format(ev.drop)}
                                     </span>
                                     <span className="font-mono text-xs text-muted-foreground tabular-nums">

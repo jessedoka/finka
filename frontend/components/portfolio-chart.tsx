@@ -1,6 +1,6 @@
 "use client"
 
-import { useId, useState } from "react"
+import { useState } from "react"
 import { gbp } from "@/lib/portfolio"
 
 // SVG viewBox space; the element itself scales to its container width.
@@ -11,14 +11,18 @@ const PAD_Y = 16
 
 type Point = { date: string; value: number }
 
-function buildPath(points: readonly { x: number; y: number }[]): {
-    line: string
-    area: string
-} {
-    if (points.length === 0) return { line: "", area: "" }
-    const line = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ")
-    const area = `${line} L${points[points.length - 1].x},${H - PAD_Y} L${points[0].x},${H - PAD_Y} Z`
-    return { line, area }
+function buildPath(points: readonly { x: number; y: number }[]): string {
+    return points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ")
+}
+
+// CSS clip-path for the area under the line, in % so it tracks the stretched SVG.
+function buildFill(points: readonly { x: number; y: number }[]): string {
+    const outline = [
+        { x: points[0].x, y: H },
+        ...points,
+        { x: points[points.length - 1].x, y: H },
+    ]
+    return `polygon(${outline.map((p) => `${(p.x / W) * 100}% ${(p.y / H) * 100}%`).join(", ")})`
 }
 
 export function PortfolioChart({
@@ -26,9 +30,8 @@ export function PortfolioChart({
     positive,
 }: {
     data: Point[]
-    positive: boolean
+    positive?: boolean
 }) {
-    const gradientId = useId()
     const [hover, setHover] = useState<number | null>(null)
 
     const values = data.map((d) => d.value)
@@ -43,43 +46,33 @@ export function PortfolioChart({
         ...d,
     }))
 
-    const { line, area } = buildPath(points)
-    const stroke = positive ? "text-emerald-500" : "text-rose-500"
+    const line = buildPath(points)
+    const stroke =
+        positive === undefined ? "text-primary" : positive ? "text-positive" : "text-negative"
     const active = hover !== null ? points[hover] : null
 
     return (
         <div className="relative">
+            {/* HTML, not an SVG pattern: the viewBox stretches to fit, which would warp the dots */}
+            {points.length > 0 && (
+                <div
+                    className={`pointer-events-none absolute inset-0 ${stroke}`}
+                    style={{
+                        clipPath: buildFill(points),
+                        backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1.25px)",
+                        backgroundSize: "6px 6px",
+                        maskImage: "linear-gradient(to bottom, rgb(0 0 0 / 0.7), rgb(0 0 0 / 0.2))",
+                    }}
+                />
+            )}
+
             <svg
                 viewBox={`0 0 ${W} ${H}`}
-                className={`h-56 w-full ${stroke}`}
+                className={`relative h-56 w-full ${stroke}`}
                 preserveAspectRatio="none"
                 role="img"
                 aria-label="Portfolio value over time"
             >
-                <defs>
-                    <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="currentColor" stopOpacity={0.22} />
-                        <stop offset="100%" stopColor="currentColor" stopOpacity={0} />
-                    </linearGradient>
-                </defs>
-
-                {/* subtle horizontal gridlines */}
-                {[0.25, 0.5, 0.75].map((t) => (
-                    <line
-                        key={t}
-                        x1={0}
-                        x2={W}
-                        y1={PAD_Y + t * (H - PAD_Y * 2)}
-                        y2={PAD_Y + t * (H - PAD_Y * 2)}
-                        className="text-border"
-                        stroke="currentColor"
-                        strokeWidth={1}
-                        strokeDasharray="3 5"
-                        vectorEffect="non-scaling-stroke"
-                    />
-                ))}
-
-                <path d={area} fill={`url(#${gradientId})`} />
                 <path
                     d={line}
                     fill="none"
@@ -91,27 +84,18 @@ export function PortfolioChart({
                 />
 
                 {active && (
-                    <>
-                        <line
-                            x1={active.x}
-                            x2={active.x}
-                            y1={0}
-                            y2={H}
-                            className="text-muted-foreground/50"
-                            stroke="currentColor"
-                            strokeWidth={1}
-                            strokeDasharray="3 4"
-                            vectorEffect="non-scaling-stroke"
-                        />
-                        <circle cx={active.x} cy={active.y} r={4} fill="currentColor" />
-                        <circle
-                            cx={active.x}
-                            cy={active.y}
-                            r={8}
-                            fill="currentColor"
-                            fillOpacity={0.15}
-                        />
-                    </>
+                    <line
+                        x1={active.x}
+                        x2={active.x}
+                        y1={0}
+                        y2={H}
+                        className="text-muted-foreground/50"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                        strokeDasharray="0 4"
+                        strokeLinecap="round"
+                        vectorEffect="non-scaling-stroke"
+                    />
                 )}
 
                 {/* invisible hit targets */}
@@ -131,9 +115,17 @@ export function PortfolioChart({
                 ))}
             </svg>
 
+            {/* HTML, not an SVG circle: the viewBox stretches to fit, which would warp it */}
             {active && (
                 <div
-                    className="pointer-events-none absolute top-2 z-10 -translate-x-1/2 whitespace-nowrap rounded-lg bg-popover px-3 py-2 text-xs shadow-md ring-1 ring-foreground/10"
+                    className={`pointer-events-none absolute size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current ring-4 ring-current/15 ${stroke}`}
+                    style={{ left: `${(active.x / W) * 100}%`, top: `${(active.y / H) * 100}%` }}
+                />
+            )}
+
+            {active && (
+                <div
+                    className="pointer-events-none absolute top-2 z-10 -translate-x-1/2 whitespace-nowrap rounded-lg bg-popover px-3 py-2 text-xs shadow-[0px_8px_24px_rgb(0_0_0/0.12)] ring-1 ring-border"
                     style={{ left: `${(active.x / W) * 100}%` }}
                 >
                     <div className="font-mono text-sm font-semibold text-foreground">

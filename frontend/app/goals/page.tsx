@@ -42,25 +42,25 @@ function useGoalInvalidate() {
 function StatusBadge({ goal }: { goal: GoalDetail }) {
     if (goal.reached)
         return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+            <span className="inline-flex items-center gap-1 rounded-full bg-positive-wash px-2 py-0.5 text-xs font-medium text-positive">
                 <CheckCircle2Icon className="size-3.5" /> Funded
             </span>
         )
     if (goal.overdue)
         return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-xs font-medium text-rose-600 dark:text-rose-400">
+            <span className="inline-flex items-center gap-1 rounded-full bg-negative-wash px-2 py-0.5 text-xs font-medium text-negative">
                 <AlertTriangleIcon className="size-3.5" /> Overdue
             </span>
         )
     if (goal.on_track === true)
         return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+            <span className="inline-flex items-center gap-1 rounded-full bg-positive-wash px-2 py-0.5 text-xs font-medium text-positive">
                 <CheckCircle2Icon className="size-3.5" /> On track
             </span>
         )
     if (goal.on_track === false)
         return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+            <span className="inline-flex items-center gap-1 rounded-full bg-warning-wash px-2 py-0.5 text-xs font-medium text-warning">
                 <AlertTriangleIcon className="size-3.5" /> Behind pace
             </span>
         )
@@ -172,10 +172,10 @@ function GoalCard({ summary, allSources }: { summary: GoalProgress; allSources: 
     const available = allSources.filter((s) => !earmarkedKeys.has(s.key))
     const pctWidth = goal.target > 0 ? Math.min((goal.funded / goal.target) * 100, 100) : 0
     const barColor = goal.reached
-        ? "bg-emerald-500"
+        ? "bg-positive"
         : goal.on_track === false || goal.overdue
-          ? "bg-amber-500"
-          : "bg-sky-500"
+          ? "bg-warning"
+          : "bg-primary"
 
     return (
         <Card>
@@ -186,7 +186,7 @@ function GoalCard({ summary, allSources }: { summary: GoalProgress; allSources: 
                             <span className="truncate">{goal.name}</span>
                             {goal.ring_fenced && (
                                 <span
-                                    className="inline-flex items-center gap-1 rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 uppercase dark:text-amber-400"
+                                    className="inline-flex items-center gap-1 rounded-full bg-warning-wash px-1.5 py-0.5 text-xs font-medium text-warning"
                                     title="Ring-fenced: this money is carved out of Spendable"
                                 >
                                     <LockIcon className="size-3" /> Ring-fenced
@@ -227,7 +227,7 @@ function GoalCard({ summary, allSources }: { summary: GoalProgress; allSources: 
                 {/* Progress */}
                 <div className="space-y-1.5">
                     <div className="flex items-end justify-between gap-3">
-                        <span className="font-mono text-2xl font-semibold tracking-tight tabular-nums">
+                        <span className="font-mono text-2xl font-semibold tabular-nums">
                             {gbp.format(goal.funded)}
                         </span>
                         <span className="text-sm text-muted-foreground">
@@ -377,7 +377,7 @@ export default function GoalsPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-2xl font-semibold tracking-tight">Goals</h1>
+                <h1 className="text-2xl font-semibold">Goals</h1>
                 <p className="text-sm text-muted-foreground">
                     Save toward a target by earmarking real sources — a trip, a house deposit, an
                     emergency fund. Progress and the funding curve come straight from your daily

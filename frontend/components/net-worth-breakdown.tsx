@@ -6,12 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { fetchBreakdown, gbp, sourceLabel } from "@/lib/portfolio"
 
 const DOT = [
-    "bg-sky-500",
-    "bg-amber-500",
-    "bg-violet-500",
-    "bg-emerald-500",
-    "bg-rose-500",
-    "bg-cyan-500",
+    "bg-chart-1",
+    "bg-chart-2",
+    "bg-chart-3",
+    "bg-chart-4",
+    "bg-chart-5",
+    "bg-chart-6",
 ]
 
 const TABS = ["All", "Spendable"] as const
@@ -55,16 +55,16 @@ export function NetWorthBreakdown() {
                     )}
                 </div>
                 {hasTabs && (
-                    <div className="inline-flex w-fit rounded-lg bg-muted p-0.5">
+                    <div className="inline-flex w-fit">
                         {TABS.map((t) => (
                             <button
                                 key={t}
                                 type="button"
                                 onClick={() => setTab(t)}
-                                className={`rounded-md px-3 py-1 text-xs font-semibold tracking-wide transition-colors ${
+                                className={`rounded-full px-3 py-1 text-sm font-semibold transition-colors ${
                                     tab === t
-                                        ? "bg-background text-foreground shadow-sm"
-                                        : "text-muted-foreground hover:text-foreground"
+                                        ? "bg-primary-wash text-primary"
+                                        : "text-foreground hover:bg-secondary"
                                 }`}
                             >
                                 {t}
@@ -88,7 +88,7 @@ export function NetWorthBreakdown() {
                 {data && entries.length > 0 && (
                     <>
                         <div>
-                            <div className="font-mono text-2xl font-semibold tracking-tight tabular-nums">
+                            <div className="font-mono text-2xl font-semibold tabular-nums">
                                 {gbp.format(spendableView ? data.spendable : (data.net_worth ?? total))}
                             </div>
                             <p className="text-xs text-muted-foreground">
@@ -105,7 +105,7 @@ export function NetWorthBreakdown() {
                                     {hasCommitted && (
                                         <span className="text-muted-foreground">
                                             Committed{" "}
-                                            <span className="font-mono font-medium text-amber-600 tabular-nums dark:text-amber-400">
+                                            <span className="font-mono font-medium text-warning tabular-nums">
                                                 {gbp.format(data.committed)}
                                             </span>
                                         </span>
@@ -113,7 +113,7 @@ export function NetWorthBreakdown() {
                                     {hasLongTerm && (
                                         <span className="text-muted-foreground">
                                             Long-term{" "}
-                                            <span className="font-mono font-medium text-violet-600 tabular-nums dark:text-violet-400">
+                                            <span className="font-mono font-medium text-chart-3 tabular-nums">
                                                 {gbp.format(data.long_term)}
                                             </span>
                                         </span>
@@ -136,12 +136,12 @@ export function NetWorthBreakdown() {
                                                     {sourceLabel(key)}
                                                 </span>
                                                 {!spendableView && longTerm.has(key) && (
-                                                    <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground uppercase">
+                                                    <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
                                                         Long-term
                                                     </span>
                                                 )}
                                                 {!spendableView && !longTerm.has(key) && committedByKey[key] > 0.005 && (
-                                                    <span className="shrink-0 rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 uppercase dark:text-amber-400">
+                                                    <span className="shrink-0 rounded-full bg-warning-wash px-1.5 py-0.5 text-xs font-medium text-warning">
                                                         {committedByKey[key] >= (data.breakdown[key] ?? 0) - 0.005
                                                             ? "Committed"
                                                             : `${gbp.format(committedByKey[key])} committed`}

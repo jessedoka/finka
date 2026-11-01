@@ -21,7 +21,7 @@ import {
 } from "@/lib/portfolio"
 
 const selectClass =
-    "h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring"
+    "h-10 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring"
 
 function percentToFraction(raw: string): string {
     const n = Number(raw)
@@ -198,7 +198,7 @@ export default function ConnectionsPage() {
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-2xl font-semibold tracking-tight">Connections</h1>
+                <h1 className="text-2xl font-semibold">Connections</h1>
                 <p className="text-sm text-muted-foreground">
                     Bring your own data sources. Connect a supported provider or point the generic
                     HTTP connector at any endpoint that returns a JSON balance — Finka polls it into
@@ -333,7 +333,7 @@ export default function ConnectionsPage() {
                                     {testMut.isPending ? "Testing…" : "Test"}
                                 </Button>
                                 {testResult?.ok && (
-                                    <span className="text-sm text-emerald-600 dark:text-emerald-400">
+                                    <span className="text-sm text-positive">
                                         ✓ Fetched £{testResult.value?.toLocaleString()}
                                     </span>
                                 )}
@@ -384,7 +384,7 @@ export default function ConnectionsPage() {
                                         ⚠ {c.last_error ?? "Last sync failed"}
                                     </div>
                                 ) : c.last_status === "ok" ? (
-                                    <div className="mt-0.5 text-xs text-emerald-600 dark:text-emerald-400">
+                                    <div className="mt-0.5 text-xs text-positive">
                                         ✓ £{c.last_value?.toLocaleString()} · synced{" "}
                                         {c.last_synced_at
                                             ? new Date(c.last_synced_at).toLocaleString("en-GB", {
@@ -412,7 +412,7 @@ export default function ConnectionsPage() {
                                     }
                                     className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                                         c.is_long_term
-                                            ? "bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                                            ? "bg-chart-3/10 text-chart-3"
                                             : "bg-muted text-muted-foreground"
                                     }`}
                                     title="Long-term/locked sources are excluded from the Spendable view"
@@ -429,7 +429,7 @@ export default function ConnectionsPage() {
                                     }
                                     className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                                         c.is_active
-                                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                            ? "bg-positive-wash text-positive"
                                             : "bg-muted text-muted-foreground"
                                     }`}
                                 >

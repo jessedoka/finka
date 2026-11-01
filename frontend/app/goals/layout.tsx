@@ -3,7 +3,7 @@ import Sidebar from "@/components/sidebar"
 export default function GoalsLayout({ children }: { children: React.ReactNode }) {
     return (
         <div className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
-            <div className="hidden border-r bg-muted/40 lg:block">
+            <div className="hidden border-r bg-sidebar lg:block">
                 <div className="sticky top-0 h-screen">
                     <Sidebar />
                 </div>

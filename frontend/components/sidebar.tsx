@@ -56,10 +56,10 @@ export default function Sidebar() {
                 )}
             </div>
             <div className="flex-1 overflow-auto py-2">
-                <nav className="grid items-start px-4 text-sm font-medium">
+                <nav className="grid items-start px-4 text-base font-semibold">
                     {menu.map((item) => (
                         <Link key={item.title
-                        } href={item.href} className={`flex items-center gap-2 p-2 rounded-lg hover:bg-secondary ${pathname === item.href ? "bg-secondary" : ""}`}>
+                        } href={item.href} className={`flex items-center gap-2 px-4 py-2 rounded-full ${pathname === item.href ? "bg-primary-wash text-primary" : "hover:bg-secondary"}`}>
                             <item.icon className="w-6 h-6" />
                             <span>{item.title}</span>
                         </Link>

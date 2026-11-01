@@ -65,10 +65,10 @@ export function PortfolioOverview() {
             <CardContent className="space-y-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div className="space-y-2">
-                        <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase">
+                        <p className="text-sm font-semibold text-muted-foreground">
                             Net Worth
                         </p>
-                        <div className="font-mono text-4xl font-semibold tracking-tight tabular-nums md:text-5xl">
+                        <div className="font-mono text-4xl font-normal tabular-nums md:text-5xl">
                             {breakdown.isLoading ? (
                                 <span className="text-muted-foreground">£—</span>
                             ) : (
@@ -79,8 +79,8 @@ export function PortfolioOverview() {
                             <div
                                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm font-medium ${
                                     positive
-                                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                                        : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                                        ? "bg-positive-wash text-positive"
+                                        : "bg-negative-wash text-negative"
                                 }`}
                             >
                                 {positive ? (
@@ -98,16 +98,16 @@ export function PortfolioOverview() {
                         )}
                     </div>
 
-                    <div className="inline-flex rounded-lg bg-muted p-0.5">
+                    <div className="inline-flex">
                         {RANGES.map((r) => (
                             <button
                                 key={r.label}
                                 type="button"
                                 onClick={() => setRange(r.label)}
-                                className={`rounded-md px-3 py-1.5 text-xs font-semibold tracking-wide transition-colors ${
+                                className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
                                     range === r.label
-                                        ? "bg-background text-foreground shadow-sm"
-                                        : "text-muted-foreground hover:text-foreground"
+                                        ? "bg-primary-wash text-primary"
+                                        : "text-foreground hover:bg-secondary"
                                 }`}
                             >
                                 {r.label}
@@ -132,7 +132,7 @@ export function PortfolioOverview() {
                         days of history.
                     </div>
                 )}
-                {points.length >= 2 && <PortfolioChart data={points} positive={positive} />}
+                {points.length >= 2 && <PortfolioChart data={points} />}
             </CardContent>
         </Card>
     )

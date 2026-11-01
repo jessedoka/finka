@@ -52,7 +52,7 @@ const EMPTY: Draft = {
 }
 
 const selectClass =
-    "h-10 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring"
+    "h-10 rounded-md border border-input bg-background px-3 text-sm outline-none focus-visible:border-ring"
 
 function draftToInput(d: Draft): AccountInput {
     return {
@@ -135,7 +135,7 @@ export default function AccountsPage() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">Manual Accounts</h1>
+                    <h1 className="text-2xl font-semibold">Manual Accounts</h1>
                     <p className="text-sm text-muted-foreground">
                         Balances you keep up to date by hand (pension, savings) that feed your net
                         worth and its projection. Live-connected providers (Trading212, Monzo,
@@ -270,31 +270,31 @@ export default function AccountsPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow className="hover:bg-transparent">
-                                    <TableHead className="px-6 text-xs tracking-wide uppercase">
+                                    <TableHead className="px-6 text-sm">
                                         Name
                                     </TableHead>
-                                    <TableHead className="text-right text-xs tracking-wide uppercase">
+                                    <TableHead className="text-right text-sm">
                                         Balance
                                     </TableHead>
-                                    <TableHead className="text-right text-xs tracking-wide uppercase">
+                                    <TableHead className="text-right text-sm">
                                         £/mo
                                     </TableHead>
-                                    <TableHead className="text-right text-xs tracking-wide uppercase">
+                                    <TableHead className="text-right text-sm">
                                         Growth
                                     </TableHead>
-                                    <TableHead className="text-right text-xs tracking-wide uppercase">
+                                    <TableHead className="text-right text-sm">
                                         Charge
                                     </TableHead>
-                                    <TableHead className="text-right text-xs tracking-wide uppercase">
+                                    <TableHead className="text-right text-sm">
                                         In {PROJECT_YEARS}y
                                     </TableHead>
-                                    <TableHead className="text-xs tracking-wide uppercase">
+                                    <TableHead className="text-sm">
                                         Horizon
                                     </TableHead>
-                                    <TableHead className="text-xs tracking-wide uppercase">
+                                    <TableHead className="text-sm">
                                         Status
                                     </TableHead>
-                                    <TableHead className="px-6 text-right text-xs tracking-wide uppercase">
+                                    <TableHead className="px-6 text-right text-sm">
                                         Actions
                                     </TableHead>
                                 </TableRow>
@@ -405,7 +405,7 @@ export default function AccountsPage() {
                                                     }
                                                     className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                                                         a.is_long_term
-                                                            ? "bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                                                            ? "bg-chart-3/10 text-chart-3"
                                                             : "bg-muted text-muted-foreground"
                                                     }`}
                                                     title="Long-term/locked assets are excluded from the Spendable view"
@@ -424,7 +424,7 @@ export default function AccountsPage() {
                                                     }
                                                     className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                                                         a.is_active
-                                                            ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                                                            ? "bg-positive-wash text-positive"
                                                             : "bg-muted text-muted-foreground"
                                                     }`}
                                                 >
