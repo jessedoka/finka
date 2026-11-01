@@ -265,8 +265,8 @@ npm run dev
 
 - App: http://localhost:3000 · API: http://localhost:8000
 
-Optionally seed a dev user and two sample manual accounts so the dashboard has
-something to render:
+Optionally seed a dev user and, on an empty setup, two sample manual accounts so
+the dashboard has something to render:
 
 ```bash
 docker compose exec api python scripts/seed.py

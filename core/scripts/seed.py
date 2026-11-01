@@ -3,16 +3,22 @@
 Enough to render the dashboard on a fresh database. Real data sources are added
 through the Connections page at runtime (or via scripts/seed_connections.py),
 not here.
+
+Runs on every `./start.sh`, so the samples only go into an empty setup: once a
+user has real data, a re-added sample would land in that day's net-worth snapshot.
 """
 
 import asyncio
 from decimal import Decimal
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from config import settings
 from models.account import Account
+from models.connection import Connection
+from models.goal import Goal
+from models.net_worth_snapshot import NetWorthSnapshot
 from models.user import User
 
 engine = create_async_engine(settings.database_url)
@@ -53,18 +59,22 @@ async def seed() -> None:
         else:
             print(f"Dev user {DEV_USER_SUB} already exists")
 
-        existing = set(
-            (await session.scalars(select(Account.name).where(Account.user_id == user.id))).all()
-        )
-        added = 0
+        for model in (Account, Connection, Goal, NetWorthSnapshot):
+            count = await session.scalar(
+                select(func.count()).select_from(model).where(model.user_id == user.id)
+            )
+            if count:
+                print(f"Skipping sample accounts: {model.__tablename__} already has rows.")
+                return
+
         for data in SAMPLE_ACCOUNTS:
-            if data["name"] in existing:
-                continue
             session.add(Account(user_id=user.id, currency="GBP", **data))
-            added += 1
 
         await session.commit()
-        print(f"Seeded {added} sample account(s). Add real sources on the Connections page.")
+        print(
+            f"Seeded {len(SAMPLE_ACCOUNTS)} sample account(s). "
+            "Add real sources on the Connections page."
+        )
 
 
 if __name__ == "__main__":

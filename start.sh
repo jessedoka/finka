@@ -39,7 +39,7 @@ if [ "$DEMO" = 1 ]; then
   echo "▸ Seeding demo data…"
   docker compose exec -T api python -m scripts.seed_demo
 else
-  echo "▸ Seeding the local user and sample accounts…"
+  echo "▸ Seeding the local user…"
   docker compose exec -T api python -m scripts.seed
 fi
 
