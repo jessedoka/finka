@@ -155,11 +155,14 @@ function AddEarmark({
 function GoalCard({ summary, allSources }: { summary: GoalProgress; allSources: Source[] }) {
     const invalidate = useGoalInvalidate()
     // Detail carries the funding series + inferred run-rate the list omits.
-    const { data: goal } = useQuery({
+    // Seed instantly from the list so the card never flashes empty. placeholderData
+    // (not initialData) so the seed isn't cached as fresh and the detail fetch
+    // always runs — otherwise series stays [] for staleTime and the curve never draws.
+    const seed: GoalDetail = { ...summary, series: [], actual_monthly: null, on_track: null }
+    const { data: goal = seed } = useQuery({
         queryKey: ["goal", summary.id],
         queryFn: () => fetchGoal(summary.id),
-        // Seed instantly from the list so the card never flashes empty.
-        initialData: { ...summary, series: [], actual_monthly: null, on_track: null } as GoalDetail,
+        placeholderData: seed,
     })
 
     const removeAllocMut = useMutation({
